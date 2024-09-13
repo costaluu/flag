@@ -42,17 +42,14 @@ jobs:
                       GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
                   fi
 
-                  if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME.exe
-                  else
-                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
-                  fi
-              shell: bash # Ensure using Bash on Ubuntu and macOS
+                  # Create ZIP file of the build artifacts
+                  zip -r $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/
+              shell: bash
               if: runner.os != 'Windows'
 
             - name: Build for Windows
               if: runner.os == 'Windows'
-              shell: pwsh # Use PowerShell for Windows
+              shell: pwsh
               run: |
                   cd src # Change to the src directory
                   $OUTPUT_DIR = "../bin/${{ matrix.os }}" # Save the binaries outside of src
@@ -100,6 +97,6 @@ jobs:
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: bin/
-                  asset_name: build.zip # Or specify the zip file names if multiple
+                  asset_path: bin/flag.zip # Path to the ZIP file
+                  asset_name: flag.zip # Name of the asset
                   asset_content_type: application/zip
