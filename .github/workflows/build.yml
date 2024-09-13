@@ -74,16 +74,6 @@ jobs:
                       Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
                   }
 
-            - name: Set Release Version Windows
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                  # Format the date and time
-                  $releaseVersion = (Get-Date).ToString('yyyyMMdd.HHmmss')
-
-                  # Write the environment variable to the GitHub Actions environment file
-                  "$env:GITHUB_ENV`nRELEASE_VERSION=$releaseVersion" | Out-File -Append -FilePath $env:GITHUB_ENV
-
             - name: List contents of bin directory
               run: |
                   pwd
@@ -104,8 +94,22 @@ jobs:
                   path: ${{ github.workspace }}/bin/${{ matrix.os }}
 
             - name: Set Release Version
-              id: set_version
-              run: echo "RELEASE_VERSION=$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
+              shell: pwsh
+              run: |
+                  # Check if the runner is Windows
+                  if ($env:GITHUB_RUNNER_OS -eq "Windows") {
+                      # Format the date and time
+                      $releaseVersion = (Get-Date).ToString('yyyyMMdd.HHmmss')
+                      
+                      # Write the environment variable to the GitHub Actions environment file
+                      "$env:GITHUB_ENV`nRELEASE_VERSION=$releaseVersion" | Out-File -Append -FilePath $env:GITHUB_ENV
+                  } else {
+                      # Format the date and time for non-Windows runners
+                      $releaseVersion = (Get-Date).ToString('yyyyMMdd.HHmmss')
+                      
+                      # Write the environment variable to the GitHub Actions environment file
+                      "$env:GITHUB_ENV`nRELEASE_VERSION=$releaseVersion" | Out-File -Append -FilePath $env:GITHUB_ENV
+                  }
 
             - name: Create Release
               id: create_release
