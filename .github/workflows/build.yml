@@ -87,3 +87,5 @@ jobs:
                   asset_path: ${{ github.workspace }}/bin/${{ matrix.os }}/flag.zip
                   asset_name: flag.zip
                   asset_content_type: application/zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
