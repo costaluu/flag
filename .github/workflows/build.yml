@@ -76,7 +76,10 @@ jobs:
                       ${{ github.workspace }}/bin/linux/flag.zip
                       ${{ github.workspace }}/bin/macos/flag.zip
                       ${{ github.workspace }}/bin/windows/flag.zip
-                  asset_name: flag.zip
+                  asset_name: |
+                      flag-linux.zip
+                      flag-macos.zip
+                      flag-windows.zip
                   asset_content_type: application/zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
