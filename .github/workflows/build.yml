@@ -38,7 +38,10 @@ jobs:
 
                   # Build for Windows
                   GOOS=windows GOARCH=amd64 go build -o $OUTPUT_DIR/windows/$BINARY_NAME.exe
-                  zip -r $OUTPUT_DIR/result.zip $OUTPUT_DIR
+
+                  # Zip only the linux, macos, and windows folders without the full path
+                  cd $OUTPUT_DIR
+                  zip -r result.zip linux macos windows
 
             - name: List contents of bin directory
               run: |
