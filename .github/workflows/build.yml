@@ -31,7 +31,7 @@ jobs:
             - name: Build for ${{ matrix.os }}
               run: |
                   cd src # Change to the src directory
-                  OUTPUT_DIR="../bin/${{ matrix.os }}" # Save the binaries outside of src
+                  OUTPUT_DIR="${{ github.workspace }}/bin/${{ matrix.os }}" # Save the binaries outside of src
                   BINARY_NAME="flag"
                   mkdir -p $OUTPUT_DIR
 
@@ -46,53 +46,28 @@ jobs:
                       zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
                   fi
 
-              shell: bash
-              if: runner.os != 'Windows'
-
-            - name: Build for Windows
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                  cd src # Change to the src directory
-                  $OUTPUT_DIR = "../bin/${{ matrix.os }}" # Save the binaries outside of src
-                  $BINARY_NAME = "flag"
-                  mkdir -p $OUTPUT_DIR
-
-                  if ($env:GITHUB_RUNNER_OS -eq "Windows") {
-                      $env:GOOS = "windows"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR\$BINARY_NAME.exe"
-                      Compress-Archive -Path "$OUTPUT_DIR\$BINARY_NAME.exe" -DestinationPath "$OUTPUT_DIR\$BINARY_NAME.zip"
-                  } elseif ($env:GITHUB_RUNNER_OS -eq "macOS") {
-                      $env:GOOS = "darwin"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
-                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
-                  } else {
-                      $env:GOOS = "linux"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
-                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
-                  }
-
             - name: List contents of bin directory
-              run: ls -la ../bin/${{ matrix.os }}
+              run: |
+                  pwd
+                  ls -la ${{ github.workspace }}/bin/${{ matrix.os }}
               if: runner.os != 'Windows'
 
             - name: List contents of bin directory (Windows)
               if: runner.os == 'Windows'
               shell: pwsh
-              run: Get-ChildItem -Path ../bin/${{ matrix.os }}
+              run: |
+                  pwd
+                  Get-ChildItem -Path ${{ github.workspace }}/bin/${{ matrix.os }}
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v3
               with:
                   name: build
-                  path: ../bin/${{ matrix.os }}
+                  path: ${{ github.workspace }}/bin/${{ matrix.os }}
 
             - name: Set Release Version
               id: set_version
-              run: echo "RELEASE_VERSION=$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
+              run: echo "RELEASE_VERSION=$(date +'%Y/%m/%d.%H:%M:%S')" >> $GITHUB_ENV
 
             - name: Create Release
               id: create_release
@@ -109,6 +84,6 @@ jobs:
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ../bin/${{ matrix.os }}/flag.zip # Absolute path to the ZIP file
-                  asset_name: flag.zip # Name of the asset
+                  asset_path: ${{ github.workspace }}/bin/${{ matrix.os }}/flag.zip
+                  asset_name: flag.zip
                   asset_content_type: application/zip
