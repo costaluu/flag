@@ -72,6 +72,15 @@ jobs:
                       Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
                   }
 
+            - name: List contents of bin directory
+              run: ls -la bin/
+              if: runner.os != 'Windows'
+
+            - name: List contents of bin directory (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: Get-ChildItem -Path bin/
+
             - name: Upload build artifacts
               uses: actions/upload-artifact@v3
               with:
