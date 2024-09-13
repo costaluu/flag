@@ -45,6 +45,34 @@ jobs:
                       GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
                       zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
                   fi
+              shell: bash
+              if: runner.os != 'Windows'
+
+            - name: Build for Windows
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                  cd src # Change to the src directory
+                  $OUTPUT_DIR = "${{ github.workspace }}/bin/${{ matrix.os }}" # Save the binaries outside of src
+                  $BINARY_NAME = "flag"
+                  mkdir -p $OUTPUT_DIR
+
+                  if ($env:GITHUB_RUNNER_OS -eq "Windows") {
+                      $env:GOOS = "windows"
+                      $env:GOARCH = "amd64"
+                      go build -o "$OUTPUT_DIR\$BINARY_NAME.exe"
+                      Compress-Archive -Path "$OUTPUT_DIR\$BINARY_NAME.exe" -DestinationPath "$OUTPUT_DIR\$BINARY_NAME.zip"
+                  } elseif ($env:GITHUB_RUNNER_OS -eq "macOS") {
+                      $env:GOOS = "darwin"
+                      $env:GOARCH = "amd64"
+                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
+                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
+                  } else {
+                      $env:GOOS = "linux"
+                      $env:GOARCH = "amd64"
+                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
+                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
+                  }
 
             - name: List contents of bin directory
               run: |
