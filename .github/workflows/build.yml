@@ -78,3 +78,26 @@ jobs:
               with:
                   name: build
                   path: bin/
+
+            - name: Set Release Version
+              id: set_version
+              run: echo "RELEASE_VERSION=$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              with:
+                  tag_name: ${{ env.RELEASE_VERSION }}
+                  release_name: Release ${{ env.RELEASE_VERSION }}
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Release Assets
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: bin/
+                  asset_name: build.zip # Or specify the zip file names if multiple
+                  asset_content_type: application/zip
