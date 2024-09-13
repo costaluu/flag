@@ -32,15 +32,13 @@ jobs:
 
                   # Build for Linux
                   GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/linux/$BINARY_NAME
-                  zip -j $OUTPUT_DIR/linux/$BINARY_NAME.zip $OUTPUT_DIR/linux/$BINARY_NAME
 
                   # Build for macOS
                   GOOS=darwin GOARCH=amd64 go build -o $OUTPUT_DIR/macos/$BINARY_NAME
-                  zip -j $OUTPUT_DIR/macos/$BINARY_NAME.zip $OUTPUT_DIR/macos/$BINARY_NAME
 
                   # Build for Windows
                   GOOS=windows GOARCH=amd64 go build -o $OUTPUT_DIR/windows/$BINARY_NAME.exe
-                  zip -j $OUTPUT_DIR/windows/$BINARY_NAME.zip $OUTPUT_DIR/windows/$BINARY_NAME.exe
+                  zip -r $OUTPUT_DIR/result.zip $OUTPUT_DIR
 
             - name: List contents of bin directory
               run: |
@@ -73,13 +71,9 @@ jobs:
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
                   asset_path: |
-                      ${{ github.workspace }}/bin/linux/flag.zip
-                      ${{ github.workspace }}/bin/macos/flag.zip
-                      ${{ github.workspace }}/bin/windows/flag.zip
+                      ${{ github.workspace }}/bin/result.zip
                   asset_name: |
-                      flag-linux.zip
-                      flag-macos.zip
-                      flag-windows.zip
+                      flag.zip
                   asset_content_type: application/zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
