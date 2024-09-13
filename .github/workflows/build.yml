@@ -10,7 +10,7 @@ on:
 
 jobs:
     build:
-        runs-on: ${{ matrix.os }} # Specify the runner here
+        runs-on: ${{ matrix.os }}
 
         strategy:
             matrix:
@@ -28,8 +28,10 @@ jobs:
 
             - name: Build for ${{ matrix.os }}
               run: |
-                  OUTPUT_DIR="bin/${{ matrix.os }}"
-                  BINARY_NAME="ff"
+                  cd src # Change to the src directory
+
+                  OUTPUT_DIR="../bin/${{ matrix.os }}" # Save the binaries outside of src
+                  BINARY_NAME="flag"
 
                   mkdir -p $OUTPUT_DIR
 
