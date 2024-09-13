@@ -10,6 +10,8 @@ on:
 
 jobs:
     build:
+        runs-on: ${{ matrix.os }} # Specify the runner here
+
         strategy:
             matrix:
                 os: [ubuntu-latest, macos-latest, windows-latest]
