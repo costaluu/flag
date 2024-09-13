@@ -12,9 +12,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/bubbletea/custom/textarea"
 	"github.com/costaluu/flag/constants"
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/logger"
