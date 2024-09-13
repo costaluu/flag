@@ -12,12 +12,7 @@ permissions: write-all
 
 jobs:
     build:
-        runs-on: ${{ matrix.os }}
-
-        strategy:
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
-                go-version: [1.23]
+        runs-on: ubuntu-latest
 
         steps:
             - name: Checkout code
@@ -26,82 +21,39 @@ jobs:
             - name: Set up Go
               uses: actions/setup-go@v5
               with:
-                  go-version: ${{ matrix.go-version }}
+                  go-version: 1.23
 
-            - name: Build for ${{ matrix.os }}
+            - name: Build for Linux, macOS, and Windows
               run: |
                   cd src # Change to the src directory
-                  OUTPUT_DIR="${{ github.workspace }}/bin/${{ matrix.os }}" # Save the binaries outside of src
+                  OUTPUT_DIR="${{ github.workspace }}/bin" # Save the binaries outside of src
                   BINARY_NAME="flag"
-                  mkdir -p $OUTPUT_DIR
+                  mkdir -p $OUTPUT_DIR/linux $OUTPUT_DIR/macos $OUTPUT_DIR/windows
 
-                  if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                      GOOS=windows GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME.exe
-                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME.exe
-                  elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-                      GOOS=darwin GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
-                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
-                  else
-                      GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
-                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
-                  fi
-              shell: bash
-              if: runner.os != 'Windows'
+                  # Build for Linux
+                  GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/linux/$BINARY_NAME
+                  zip -j $OUTPUT_DIR/linux/$BINARY_NAME.zip $OUTPUT_DIR/linux/$BINARY_NAME
 
-            - name: Build for Windows
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                  cd src # Change to the src directory
-                  $OUTPUT_DIR = "${{ github.workspace }}/bin/${{ matrix.os }}" # Save the binaries outside of src
-                  $BINARY_NAME = "flag"
-                  mkdir -p $OUTPUT_DIR
+                  # Build for macOS
+                  GOOS=darwin GOARCH=amd64 go build -o $OUTPUT_DIR/macos/$BINARY_NAME
+                  zip -j $OUTPUT_DIR/macos/$BINARY_NAME.zip $OUTPUT_DIR/macos/$BINARY_NAME
 
-                  if ($env:GITHUB_RUNNER_OS -eq "Windows") {
-                      $env:GOOS = "windows"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR\$BINARY_NAME.exe"
-                      Compress-Archive -Path "$OUTPUT_DIR\$BINARY_NAME.exe" -DestinationPath "$OUTPUT_DIR\$BINARY_NAME.zip"
-                  } elseif ($env:GITHUB_RUNNER_OS -eq "macOS") {
-                      $env:GOOS = "darwin"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
-                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
-                  } else {
-                      $env:GOOS = "linux"
-                      $env:GOARCH = "amd64"
-                      go build -o "$OUTPUT_DIR/$BINARY_NAME"
-                      Compress-Archive -Path "$OUTPUT_DIR/$BINARY_NAME" -DestinationPath "$OUTPUT_DIR/$BINARY_NAME.zip"
-                  }
+                  # Build for Windows
+                  GOOS=windows GOARCH=amd64 go build -o $OUTPUT_DIR/windows/$BINARY_NAME.exe
+                  zip -j $OUTPUT_DIR/windows/$BINARY_NAME.zip $OUTPUT_DIR/windows/$BINARY_NAME.exe
 
             - name: List contents of bin directory
               run: |
                   pwd
-                  ls -la ${{ github.workspace }}/bin/${{ matrix.os }}
-              if: runner.os != 'Windows'
-
-            - name: List contents of bin directory (Windows)
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                  pwd
-                  Get-ChildItem -Path ${{ github.workspace }}/bin/${{ matrix.os }}
+                  ls -la ${{ github.workspace }}/bin
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v3
               with:
                   name: build
-                  path: ${{ github.workspace }}/bin/${{ matrix.os }}
-
-            - name: Set Release Version (Windows)
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                  $releaseVersion = (Get-Date).ToString('yyyyMMdd.HHmmss')
-                  Write-Output "RELEASE_VERSION=$releaseVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+                  path: ${{ github.workspace }}/bin
 
             - name: Set Release Version
-              if: runner.os != 'Windows'
               id: set_version
               run: echo "RELEASE_VERSION=$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
 
@@ -120,7 +72,10 @@ jobs:
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ${{ github.workspace }}/bin/${{ matrix.os }}/flag.zip
+                  asset_path: |
+                      ${{ github.workspace }}/bin/linux/flag.zip
+                      ${{ github.workspace }}/bin/macos/flag.zip
+                      ${{ github.workspace }}/bin/windows/flag.zip
                   asset_name: flag.zip
                   asset_content_type: application/zip
               env:
