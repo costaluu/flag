@@ -34,16 +34,18 @@ jobs:
                   OUTPUT_DIR="../bin/${{ matrix.os }}" # Save the binaries outside of src
                   BINARY_NAME="flag"
                   mkdir -p $OUTPUT_DIR
+
                   if [ "${{ matrix.os }}" = "windows-latest" ]; then
                       GOOS=windows GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME.exe
+                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME.exe
                   elif [ "${{ matrix.os }}" = "macos-latest" ]; then
                       GOOS=darwin GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
+                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
                   else
                       GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/$BINARY_NAME
+                      zip -j $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/$BINARY_NAME
                   fi
 
-                  # Create ZIP file of the build artifacts
-                  zip -r $OUTPUT_DIR/$BINARY_NAME.zip $OUTPUT_DIR/
               shell: bash
               if: runner.os != 'Windows'
 
@@ -55,6 +57,7 @@ jobs:
                   $OUTPUT_DIR = "../bin/${{ matrix.os }}" # Save the binaries outside of src
                   $BINARY_NAME = "flag"
                   mkdir -p $OUTPUT_DIR
+
                   if ($env:GITHUB_RUNNER_OS -eq "Windows") {
                       $env:GOOS = "windows"
                       $env:GOARCH = "amd64"
@@ -73,19 +76,19 @@ jobs:
                   }
 
             - name: List contents of bin directory
-              run: ls -la bin/
+              run: ls -la ../bin/${{ matrix.os }}
               if: runner.os != 'Windows'
 
             - name: List contents of bin directory (Windows)
               if: runner.os == 'Windows'
               shell: pwsh
-              run: Get-ChildItem -Path bin/
+              run: Get-ChildItem -Path ../bin/${{ matrix.os }}
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v3
               with:
                   name: build
-                  path: bin/
+                  path: ../bin/${{ matrix.os }}
 
             - name: Set Release Version
               id: set_version
@@ -106,6 +109,6 @@ jobs:
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: bin/flag.zip # Path to the ZIP file
+                  asset_path: ../bin/${{ matrix.os }}/flag.zip # Absolute path to the ZIP file
                   asset_name: flag.zip # Name of the asset
                   asset_content_type: application/zip
