@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -17,6 +18,7 @@ import (
 	"github.com/costaluu/flag/bubbletea/custom/textarea"
 	"github.com/costaluu/flag/constants"
 	filesystem "github.com/costaluu/flag/fs"
+	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
 	"github.com/costaluu/flag/resolver"
 	"github.com/costaluu/flag/types"
@@ -466,7 +468,7 @@ func (m model) View() string {
 		helpText += lipgloss.NewStyle().Foreground(lipgloss.Color("240")).SetString("• " + key.Help().Key).Render() + " " + key.Help().Desc + "\n"
 	}
 
-	return constants.MergeMark.Render() + " " + lipgloss.NewStyle().SetString(m.title).Bold(true).Render() + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), " ", helpText)
+	return constants.MergeMark + " " + lipgloss.NewStyle().SetString(m.title).Bold(true).Render() + "\n" + lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), " ", helpText)
 }
 
 func SolveConflicts(content []resolver.ConflictRecord, conflictPath string, title string) []resolver.ConflictRecord {
@@ -545,14 +547,15 @@ func FindGitConflicts(filePath string) ([]resolver.ConflictRecord) {
 }
 
 func Resolve(title string) {
+	var rootDir string = git.GetRepositoryRoot()
 	// var iterator int = 0
 	var allConflictsSolved bool = false
 	
 	for !allConflictsSolved {
 		// iterator++
 	
-		conflicts := FindGitConflicts("../.features/merge-tmp")
-		processedConflicts := SolveConflicts(conflicts, "../.features/merge-tmp", title)
+		conflicts := FindGitConflicts(filepath.Join(rootDir, ".features", "merge-tmp"))
+		processedConflicts := SolveConflicts(conflicts, filepath.Join(rootDir, ".features", "merge-tmp"), title)
 		var solvedConflicts []resolver.ConflictRecord
 		var unSolvedConflicts []resolver.ConflictRecord
 
@@ -569,7 +572,7 @@ func Resolve(title string) {
 		for _, solvedConflict := range solvedConflicts {
 			stringContent := strings.Split(solvedConflict.Current.Content, "\n")
 
-			err := filesystem.FileReplaceLinesInFile("../.features/merge-tmp", solvedConflict.Current.LineStart + lineOffset, solvedConflict.Current.LineEnd + lineOffset, stringContent)
+			err := filesystem.FileReplaceLinesInFile(filepath.Join(rootDir, ".features", "merge-tmp"), solvedConflict.Current.LineStart + lineOffset, solvedConflict.Current.LineEnd + lineOffset, stringContent)
 			
 			if err != nil {
 				logger.Fatal[error](err)

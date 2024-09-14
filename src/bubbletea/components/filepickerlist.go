@@ -29,7 +29,7 @@ type FileListItem struct {
 }
 
 func (i FileListItem) Title() string {
-	return fmt.Sprintf("%s %s", i.ItemTitle, constants.FileMark.Render())
+	return fmt.Sprintf("%s %s", i.ItemTitle, constants.FileMark)
 }
 
 func (i FileListItem) Description() string { return i.Desc }

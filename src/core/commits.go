@@ -70,7 +70,7 @@ func ToggleCommitFeature(featureName string, state string) {
 	}
 
 	if !foundFeature {
-		logger.Info[string](fmt.Sprintf("Feature %s does not exists o"))
+		logger.Result[string](fmt.Sprintf("feature %s does not exists", featureName))
 	}
 
 	for path, features := range commitsSet {
@@ -200,8 +200,7 @@ func CommitUpdateBase(path string, finalMessage bool) {
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
 
 	if !baseExists {
-		logger.Info[string](fmt.Sprintf("%s is not a base file", path))
-		os.Exit(0)
+		logger.Result[string](fmt.Sprintf("%s is not a base file", path))
 	}
 
 	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", normalizedPath, "base"))
@@ -227,8 +226,7 @@ func CommitBase(path string, skipForm bool) {
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
 
 	if baseExists {
-		logger.Info[string](fmt.Sprintf("%s is already a base commit", path))
-		os.Exit(0)
+		logger.Result[string](fmt.Sprintf("%s is already a base commit", path))
 	}
 
 	if !skipForm {
@@ -341,7 +339,7 @@ func CommitSaveToCurrentState(path string) {
 	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "commits", normalizedPath), workingtree.StringToStringSlice(key))
 
 	if !exists {
-		logger.Fatal[string]("Could not found state")
+		logger.Result[string]("Could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "commits", normalizedPath), key)
@@ -432,7 +430,7 @@ func CommitSave(path string, finalMessage bool) {
 	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "commits", normalizedPath), workingtree.StringToStringSlice(selected.ItemValue))
 
 	if !exists {
-		logger.Fatal[string]("Could not found state")
+		logger.Result[string]("Could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "commits", normalizedPath), selected.ItemValue)
@@ -567,8 +565,7 @@ func BuildBaseForFile(path string) {
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
 
 	if !baseExists {
-		logger.Info[string](fmt.Sprintf("%s is not a base file", path))
-		os.Exit(0)
+		logger.Result[string](fmt.Sprintf("%s is not a base file", path))
 	}
 
 	featuresTurnedOn := GetCommitFeaturesFromPath(normalizedPath)
@@ -597,7 +594,7 @@ func BuildBaseForFile(path string) {
 			tempStateCheckSum, exists := tree[nearPrefixKey]
 			
 			if !exists {
-				logger.Fatal[string]("Build base: couldn't find temp state")
+				logger.Result[string]("Build base: couldn't find temp state")
 			}
 			
 			var tempStateName string
@@ -623,7 +620,7 @@ func BuildBaseForFile(path string) {
 				soloFeatureCheckSum, exists := tree[fmt.Sprintf("[%s]", featureRemainingId)]
 
 				if !exists {
-					logger.Fatal[string]("Build base: couldn't find feature for building temp state")
+					logger.Result[string]("Build base: couldn't find feature for building temp state")
 				}
 
 				var featureName string = ""
@@ -636,7 +633,7 @@ func BuildBaseForFile(path string) {
 				}
 
 				if featureName == "" {
-					logger.Fatal[string]("Build base: couldn't find feature name for building temp state")
+					logger.Result[string]("Build base: couldn't find feature name for building temp state")
 				}
 
 				styledTempStateName := lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor)).SetString(tempStateName).Bold(true)
@@ -687,8 +684,7 @@ func LookForChangesInBase(path string) bool {
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
 
 	if !baseExists {
-		logger.Info[string](fmt.Sprintf("%s is not a base file", path))
-		os.Exit(0)
+		logger.Result[string](fmt.Sprintf("%s is not a base file", path))
 	}
 
 	featuresTurnedOn := GetCommitFeaturesFromPath(normalizedPath)
@@ -714,7 +710,7 @@ func LookForChangesInBase(path string) bool {
 		_, currentStateCheckSum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "commits", normalizedPath), currentStateFeatures)
 
 		if !exists {
-			logger.Fatal[string]("Can not find current state")
+			logger.Result[string]("Can not find current state")
 		}
 
 		currentCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
@@ -737,8 +733,7 @@ func RebaseFile(path string, finalMessage bool) {
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
 
 	if !baseExists {
-		logger.Info[string](fmt.Sprintf("%s is not a base file", path))
-		os.Exit(0)
+		logger.Result[string](fmt.Sprintf("%s is not a base file", path))
 	}
 
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "commits", normalizedPath))

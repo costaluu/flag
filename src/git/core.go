@@ -85,7 +85,7 @@ func Merge3Way(fileAPath string, fileBasePath string, fileBPath string, featureA
 		logger.Fatal[error](err)
 	}
 
-	filesystem.FileWrite(result.Result, filepath.Join(repoRoot, ".features/merge-tmp"))
+	filesystem.FileWrite(result.Result, filepath.Join(repoRoot, ".features", "merge-tmp"))
 
 	return result.Conflicts
 }

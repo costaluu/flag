@@ -11,8 +11,8 @@ var (
 
 var (
 	AccentColor = "#f97900"
-	MergeMark = lipgloss.NewStyle().Foreground(lipgloss.Color(AccentColor)).SetString("⮂")
-	FileMark = lipgloss.NewStyle().Foreground(lipgloss.Color("166")).SetString("🗎")
+	MergeMark = "🔁"
+	FileMark = "📄"
 	CheckMark = lipgloss.NewStyle().Foreground(lipgloss.Color("42")).SetString("✓")
 	XMark = lipgloss.NewStyle().Foreground(lipgloss.Color("160")).SetString("⨯")
 	InfoMark = lipgloss.NewStyle().Foreground(lipgloss.Color("31")).SetString("ⓘ")

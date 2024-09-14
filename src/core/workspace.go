@@ -61,7 +61,7 @@ func CreateNewWorkspace() {
 			},
 		}
 
-	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features/delimeters"), delimeters)
+	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 
 	logger.Success[string]("folder .features created!")
 }

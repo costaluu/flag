@@ -23,7 +23,7 @@ func ReadDelimeters() types.Delimeters {
 
 	var delimeters types.Delimeters
 
-	filesystem.FileReadJSONFromFile(filepath.Join(rootDir, ".features/delimeters"), &delimeters)
+	filesystem.FileReadJSONFromFile(filepath.Join(rootDir, ".features", "delimeters"), &delimeters)
 
 	return delimeters
 }
@@ -38,7 +38,7 @@ func SetDelimeter(extension string, start string, end string) {
 
 	var rootDir string = git.GetRepositoryRoot()
 
-	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features/delimeters"), delimeters)
+	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 }
 
 func DeleteDelimeter(extension string) {
@@ -54,7 +54,7 @@ func DeleteDelimeter(extension string) {
 
 	var rootDir string = git.GetRepositoryRoot()
 
-	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features/delimeters"), delimeters)
+	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 }
 
 func ListDelimeters() {
