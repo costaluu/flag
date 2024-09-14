@@ -572,7 +572,8 @@ func PromoteBlockFeature(featureName string) {
 
 	for path, blockList := range blocksSet {
 		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
-
+		normalizedPath := utils.HashFilePath(path)
+		
 		for _, block := range blockList {
 			if block.State == constants.STATE_DEV || block.State == constants.STATE_ON {
 				var foundFeatureById *types.Match = nil
@@ -611,9 +612,14 @@ func PromoteBlockFeature(featureName string) {
 
 				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 			}
-
-			normalizedPath := utils.HashFilePath(path)
+			
 			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", normalizedPath, fmt.Sprintf("%s.block", block.Id)))
+		}
+
+		blocks := ListBlocksFromPath(path)
+
+		if len(blocks) == 0 {
+			filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", normalizedPath))
 		}
 	}
 
@@ -646,6 +652,7 @@ func DemoteBlockFeature(featureName string) {
 
 	for path, blockList := range blocksSet {
 		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
+		normalizedPath := utils.HashFilePath(path)
 
 		for _, block := range blockList {
 			if block.State == constants.STATE_DEV || block.State == constants.STATE_OFF {
@@ -686,8 +693,13 @@ func DemoteBlockFeature(featureName string) {
 				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 			}
 
-			normalizedPath := utils.HashFilePath(path)
 			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", normalizedPath, fmt.Sprintf("%s.block", block.Id)))
+		}
+
+		blocks := ListBlocksFromPath(path)
+
+		if len(blocks) == 0 {
+			filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", normalizedPath))
 		}
 	}
 
