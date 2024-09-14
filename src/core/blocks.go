@@ -348,7 +348,7 @@ func ToggleBlockFeature(featureName string, state string) {
 	}
 
 	if !foundFeature {
-		logger.Info[string](fmt.Sprintf("feature %s does not exists"))
+		logger.Result[string](fmt.Sprintf("feature %s does not exists"))
 	}
 
 	for path, blockList := range blocksSet {
