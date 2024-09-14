@@ -16,7 +16,7 @@ func ReadDelimeters() types.Delimeters {
 	workspaceExists := CheckWorkspaceFolder()
 
 	if !workspaceExists {
-		logger.Fatal[string]("folder .features doesn't exists, please use switch init")
+		logger.Result[string]("folder .features doesn't exists, please use switch init")
 	}
 
 	var rootDir string = git.GetRepositoryRoot()

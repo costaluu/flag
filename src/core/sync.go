@@ -107,7 +107,7 @@ func handleCommit(path string) {
 					}
 
 					if len(value) < constants.MIN_FEATURE_CHARACTERS {
-						return fmt.Errorf("Please provide a name with at least 5 characters")
+						return fmt.Errorf(fmt.Sprintf("Please provide a name with at least %d characters", constants.MIN_FEATURE_CHARACTERS))
 					} else if strings.Contains(value, "+") {
 						return fmt.Errorf("Strings can not contain special characters")
 					}

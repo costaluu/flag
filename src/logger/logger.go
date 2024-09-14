@@ -9,11 +9,11 @@ import (
 )
 
 func Info[T any](msg T) {
-	fmt.Printf("%s %v\n", constants.InfoMark.Render(), msg)
+	fmt.Printf("ℹ️ %v\n", msg)
 }
 
 func Result[T any](msg T) {
-	fmt.Printf("%s %v\n", constants.InfoMark.Render(), msg)
+	fmt.Printf("ℹ️ %v\n", msg)
 	os.Exit(0)
 }
 

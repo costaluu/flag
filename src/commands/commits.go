@@ -19,17 +19,13 @@ var CommitsFeaturesToggleCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 2 {
-			logger.Info[string](fmt.Sprintf("usage: %s commits %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s commits %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
 		}
 
 		state := strings.ToUpper(args[1])
 
 		if state != constants.STATE_ON && state != constants.STATE_OFF {
-			logger.Info[string]("invalid state. use on|off")
-
-			return nil
+			logger.Result[string]("invalid state. use on|off")
 		}
 
 		core.ToggleCommitFeature(args[0], state)
@@ -87,15 +83,11 @@ var CommitsFeaturesNewFeatureCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Info[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
 		}
 
 		if len(args[0]) < constants.MIN_FEATURE_CHARACTERS {
-			logger.Info[string]("a feature name should have at least 5 characters")
-
-			return nil
+			logger.Result[string](fmt.Sprintf("a feature name should have at least %d characters", constants.MIN_FEATURE_CHARACTERS))
 		}
 
 		selectedItem := utils.PickModifedOrUntrackedFiles("Select the commit base that the new feature will be created")

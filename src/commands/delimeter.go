@@ -27,15 +27,13 @@ var DelimeterSetCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 		
 		if len(args) < 3 {
-			logger.Info[string](fmt.Sprintf("usage: %s delimeter %s", constants.COMMAND, ctx.Command.ArgsUsage))
-			
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s delimeter %s", constants.COMMAND, ctx.Command.ArgsUsage))			
 		}
 
 		extension := args[0]
 
 		if !strings.HasPrefix(extension, ".") {
-			logger.Info[string]("invalid extension")
+			logger.Result[string]("invalid extension")
 		}
 
 		core.SetDelimeter(extension, args[1], args[2])

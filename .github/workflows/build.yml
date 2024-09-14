@@ -25,10 +25,10 @@ jobs:
 
             - name: Build for Linux, macOS, and Windows
               run: |
-                  cd src # Change to the src directory
                   OUTPUT_DIR="${{ github.workspace }}/bin" # Save the binaries outside of src
                   BINARY_NAME="flag"
                   mkdir -p $OUTPUT_DIR/linux $OUTPUT_DIR/macos $OUTPUT_DIR/windows
+                  cd $OUTPUT_DIR/src # Change to the src directory
 
                   # Build for Linux
                   GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/linux/$BINARY_NAME
@@ -41,7 +41,10 @@ jobs:
 
                   # Zip only the linux, macos, and windows folders without the full path
                   cd $OUTPUT_DIR
-                  zip -r result.zip linux macos windows
+
+                  zip -r flag-windows.zip windows
+                  zip -r flag-linux.zip linux
+                  zip -r flag-macos.zip macos
 
             - name: List contents of bin directory
               run: |
@@ -69,14 +72,32 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Upload Release Assets
+            - name: Upload Windows Release Asset
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: |
-                      ${{ github.workspace }}/bin/result.zip
-                  asset_name: |
-                      flag.zip
+                  asset_path: ${{ github.workspace }}/bin/flag-windows.zip
+                  asset_name: flag-windows.zip
+                  asset_content_type: application/zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Linux Release Asset
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ${{ github.workspace }}/bin/flag-linux.zip
+                  asset_name: flag-linux.zip
+                  asset_content_type: application/zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload macOS Release Asset
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ${{ github.workspace }}/bin/flag-macos.zip
+                  asset_name: flag-macos.zip
                   asset_content_type: application/zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

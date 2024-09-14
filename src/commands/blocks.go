@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/core"
@@ -17,17 +18,13 @@ var BlocksFeaturesToggleCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 2 {
-			logger.Info[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-			
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s blocks %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))			
 		}
 
-		state := args[1]
+		state := strings.ToUpper(args[1])
 
 		if state != constants.STATE_DEV && state != constants.STATE_ON && state != constants.STATE_OFF {
-			logger.Info[string]("invalid state. use on|off|dev")
-			
-			return nil
+			logger.Result[string]("invalid state. use on|off|dev")			
 		}
 
 		core.ToggleBlockFeature(args[0], state)
@@ -44,9 +41,7 @@ var BlocksFeaturesPromoteCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Info[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-			
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s blocks %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))			
 		}
 
 		core.PromoteBlockFeature(args[0])
@@ -63,9 +58,7 @@ var BlocksFeaturesDemoteCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Info[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-			
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s blocks %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))			
 		}
 
 		core.DemoteBlockFeature(args[0])
@@ -83,9 +76,7 @@ var BlocksFeaturesDetailsCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Info[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
-			
-			return nil
+			logger.Result[string](fmt.Sprintf("usage: %s blocks %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))			
 		}
 
 		core.DemoteBlockFeature(args[0])
@@ -101,5 +92,6 @@ var BlocksFeaturesCommand *cli.Command = &cli.Command{
 		BlocksFeaturesToggleCommand,
 		BlocksFeaturesPromoteCommand,
 		BlocksFeaturesDemoteCommand,
+		BlocksFeaturesDetailsCommand,
 	},
 }
