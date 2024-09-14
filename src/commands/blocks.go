@@ -90,6 +90,5 @@ var BlocksFeaturesCommand *cli.Command = &cli.Command{
 		BlocksFeaturesPromoteCommand,
 		BlocksFeaturesDemoteCommand,
 		BlocksFeaturesDetailsCommand,
-		BlocksFeaturesDetailsCommand,
 	},
 }
