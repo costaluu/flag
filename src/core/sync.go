@@ -19,33 +19,33 @@ import (
 func handleDeleted(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	normalizedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashFilePath(path)
 
-	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, "blocks", normalizedPath))
+	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, "blocks", hashedPath))
 	
 	if blockExists {
-		filesystem.FileDeleteFolder(filepath.Join(rootDir, "blocks", normalizedPath))
+		filesystem.FileDeleteFolder(filepath.Join(rootDir, "blocks", hashedPath))
 	}
 
-	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, "commits", normalizedPath))
+	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, "commits", hashedPath))
 	
 	if commitExists {
-		filesystem.FileDeleteFolder(filepath.Join(rootDir, "commits", normalizedPath))
+		filesystem.FileDeleteFolder(filepath.Join(rootDir, "commits", hashedPath))
 	}
 }
 
 func handleCommit(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	normalizedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashFilePath(path)
 
-	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", normalizedPath))
+	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", hashedPath))
 
 	if commitExists {	
 		hasChangesWithoutSave := LookForChangesInBase(path)
 		name := GetCurrentStateName(path)
-		tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "commits", normalizedPath))
-		features := GetCommitFeaturesFromPath(normalizedPath)
+		tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "commits", hashedPath))
+		features := GetCommitFeaturesFromPath(hashedPath)
 
 		if hasChangesWithoutSave {
 			var options []huh.Option[string] = []huh.Option[string]{
@@ -130,16 +130,16 @@ func handleCommit(path string) {
 func HandleBlock(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	normalizedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashFilePath(path)
 
-	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "blocks", normalizedPath))
+	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 
 	matches := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
 	
 	if len(matches) > 0 && !blockExists {
-		filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks", normalizedPath))
+		filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 	} else if blockExists && len(matches) == 0 {
-		filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", normalizedPath))
+		filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 	}
 
 	if len(matches) > 0 {
@@ -180,7 +180,7 @@ func HandleBlock(path string) {
 		}
 
 		for _, feature := range features {
-			filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", normalizedPath, fmt.Sprintf("%s.block", feature.Id)), feature)
+			filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", feature.Id)), feature)
 		}
 
 		RemoveAllUnsyncedBlocksFromPath(path)		

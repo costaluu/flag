@@ -72,15 +72,15 @@ func GenerateId() string {
 
 func HashFilePath(filePath string) string {
     // Replace Windows-style backslashes with a unique sequence
-    normalizedPath := strings.ReplaceAll(filePath, "\\", "_BACKSLASH_")
+    hashedPath := strings.ReplaceAll(filePath, "\\", "_BACKSLASH_")
     // Replace Unix-style slashes with a different unique sequence
-    normalizedPath = strings.ReplaceAll(normalizedPath, "/", "_SLASH_")
-    return normalizedPath
+    hashedPath = strings.ReplaceAll(hashedPath, "/", "_SLASH_")
+    return hashedPath
 }
 
-func ReverseHashFilePath(normalizedPath string) string {
+func ReverseHashFilePath(hashedPath string) string {
     // Replace unique sequences with the original separators
-    originalPath := strings.ReplaceAll(normalizedPath, "_BACKSLASH_", "\\")
+    originalPath := strings.ReplaceAll(hashedPath, "_BACKSLASH_", "\\")
     originalPath = strings.ReplaceAll(originalPath, "_SLASH_", "/")
 	
     return originalPath
@@ -93,7 +93,7 @@ func NormalizePath(path string) string {
 
 // shouldIgnore determines if a given path should be ignored based on ignore patterns
 func ShouldIgnorePath(path string, rootDir string, patterns []string) bool {
-	normalizedPath := NormalizePath(path)
+	hashedPath := NormalizePath(path)
 
     for _, pattern := range patterns {
         g, err := glob.Compile(NormalizePath(rootDir) + "/" + pattern, '/')
@@ -102,7 +102,7 @@ func ShouldIgnorePath(path string, rootDir string, patterns []string) bool {
             continue
         }
 		
-        if g.Match(normalizedPath) {
+        if g.Match(hashedPath) {
             return true
         }
     }
@@ -140,13 +140,19 @@ func FileListAllFiles() []string {
 			return nil
 		}
 
+		if strings.Contains(path, ".features") {
+			return nil
+		}
+
 		relativePath, err := filepath.Rel(rootDir, path)
 		
 		if err != nil {
 			return err
 		}
 
-		files = append(files, relativePath)
+		normalizedPath := NormalizePath(relativePath)
+
+		files = append(files, normalizedPath)
 
         return nil
     })

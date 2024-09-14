@@ -28,7 +28,6 @@ func runGitCommand(args ...string) ([]string, error) {
 	return lines, nil
 }
 
-
 func GetRepositoryRoot() (string) {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	out, err := cmd.Output()
@@ -90,6 +89,19 @@ func Merge3Way(fileAPath string, fileBasePath string, fileBPath string, featureA
 	return result.Conflicts
 }
 
+// Filter applies a predicate function to each element in the input slice
+// and returns a new slice containing only the elements that satisfy the predicate.
+func arrayFilter[T any](slice []T, predicate func(T) bool) []T {
+    var result []T
+	
+    for _, element := range slice {
+        if predicate(element) {
+            result = append(result, element)
+        }
+    }
+
+    return result
+}
 
 func GetDeletedFiles() []string {
 	repoRoot := GetRepositoryRoot()
@@ -103,11 +115,10 @@ func GetDeletedFiles() []string {
 		logger.Fatal[error](err)
 	}
 	
-	for i, file := range deleted {
-		deleted[i] = file
-	}
 
-	return deleted
+	return arrayFilter[string](deleted, func (path string) bool {
+		return !strings.Contains(path, ".features")
+	})
 }
 
 func GetModifedFiles() []string {	
@@ -118,11 +129,9 @@ func GetModifedFiles() []string {
 		logger.Fatal[error](err)
 	}
 
-	for i, file := range modified {
-		modified[i] = file
-	}
-
-	return modified
+	return arrayFilter[string](modified, func (path string) bool {
+		return !strings.Contains(path, ".features")
+	})
 }
 
 func GetUntrackedFiles() []string {
@@ -135,9 +144,7 @@ func GetUntrackedFiles() []string {
 		logger.Fatal[error](err)
 	}
 
-	for i, file := range untracked {
-		untracked[i] = file
-	}
-	
-	return untracked
+	return arrayFilter[string](untracked, func (path string) bool {
+		return !strings.Contains(path, ".features")
+	})
 }
