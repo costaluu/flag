@@ -25,10 +25,11 @@ jobs:
 
             - name: Build for Linux, macOS, and Windows
               run: |
+                  GIT_WORKSPACE="${{ github.workspace }}"
                   OUTPUT_DIR="${{ github.workspace }}/bin" # Save the binaries outside of src
                   BINARY_NAME="flag"
                   mkdir -p $OUTPUT_DIR/linux $OUTPUT_DIR/macos $OUTPUT_DIR/windows
-                  cd $OUTPUT_DIR/src # Change to the src directory
+                  cd $GIT_WORKSPACE/src # Change to the src directory
 
                   # Build for Linux
                   GOOS=linux GOARCH=amd64 go build -o $OUTPUT_DIR/linux/$BINARY_NAME
