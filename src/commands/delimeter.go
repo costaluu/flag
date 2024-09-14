@@ -27,7 +27,7 @@ var DelimeterSetCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 		
 		if len(args) < 3 {
-			logger.Result[string](fmt.Sprintf("usage: %s delimeter %s", constants.COMMAND, ctx.Command.ArgsUsage))			
+			logger.Result[string](fmt.Sprintf("usage: %s delimeters %s", constants.COMMAND, ctx.Command.ArgsUsage))			
 		}
 
 		extension := args[0]
@@ -52,7 +52,7 @@ var DelimeterDeleteCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 		
 		if len(args) != 3 {
-			logger.Info[string](fmt.Sprintf("usage: %s delimeter %s", constants.COMMAND, ctx.Command.ArgsUsage))
+			logger.Info[string](fmt.Sprintf("usage: %s delimeters %s", constants.COMMAND, ctx.Command.ArgsUsage))
 			
 			return nil
 		}

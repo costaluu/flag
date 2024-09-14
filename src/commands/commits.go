@@ -62,7 +62,7 @@ var CommitsFeaturesBaseCommand *cli.Command = &cli.Command{
 		&cli.BoolFlag{Name: "skip-form", Aliases: []string{"sf"}},
 	},
 	Action: func(ctx *cli.Context) error {
-		selectedItem := utils.PickModifedOrUntrackedFiles("Pick a file to make a commit base")
+		selectedItem := utils.PickAllFiles("Pick a file to make a commit base")
 
 		if selectedItem.ItemTitle != "" {
 			core.CommitBase(selectedItem.ItemTitle, ctx.Bool("skip-form"))
@@ -83,7 +83,7 @@ var CommitsFeaturesNewFeatureCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Result[string](fmt.Sprintf("usage: %s %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
+			logger.Result[string](fmt.Sprintf("usage: %s commits %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
 		}
 
 		if len(args[0]) < constants.MIN_FEATURE_CHARACTERS {
@@ -132,7 +132,7 @@ var CommitsFeaturesDetailsCommand *cli.Command = &cli.Command{
 	Name:      "details",
 	Usage:     "show a report for a commit base",
 	Action: func(ctx *cli.Context) error {
-		selectedItem := utils.PickModifedOrUntrackedFiles("Select the commit base to delete")
+		selectedItem := utils.PickAllFiles("Pick a file to show details")
 
 		if selectedItem.ItemTitle != "" {
 			core.CommitDetailsFromPath(selectedItem.ItemTitle)

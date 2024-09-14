@@ -7,6 +7,7 @@ import (
 	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/core"
 	"github.com/costaluu/flag/logger"
+	"github.com/costaluu/flag/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -67,19 +68,15 @@ var BlocksFeaturesDemoteCommand *cli.Command = &cli.Command{
 	},
 }
 
-// TODO
 var BlocksFeaturesDetailsCommand *cli.Command = &cli.Command{
 	Name:  "details",
 	Usage: "show a report for a file",
-	ArgsUsage: `<feature_name>`,
 	Action: func(ctx *cli.Context) error {
-		args := ctx.Args().Slice()
+		selectedItem := utils.PickAllFiles("Pick a file to show details")
 
-		if len(args) < 1 {
-			logger.Result[string](fmt.Sprintf("usage: %s blocks %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))			
+		if selectedItem.ItemTitle != "" {
+			core.BlockDetails(selectedItem.ItemTitle)
 		}
-
-		core.DemoteBlockFeature(args[0])
 
 		return nil
 	},
@@ -92,6 +89,7 @@ var BlocksFeaturesCommand *cli.Command = &cli.Command{
 		BlocksFeaturesToggleCommand,
 		BlocksFeaturesPromoteCommand,
 		BlocksFeaturesDemoteCommand,
+		BlocksFeaturesDetailsCommand,
 		BlocksFeaturesDetailsCommand,
 	},
 }

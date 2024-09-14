@@ -140,7 +140,13 @@ func FileListAllFiles() []string {
 			return nil
 		}
 
-		files = append(files, path)
+		relativePath, err := filepath.Rel(rootDir, path)
+		
+		if err != nil {
+			return err
+		}
+
+		files = append(files, relativePath)
 
         return nil
     })

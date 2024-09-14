@@ -9,15 +9,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-
 func main() {
-	// core.UnSyncAllBlocksFromPath("src/base.txt")
 	app := &cli.App{
 		Name: constants.APP_NAME,
 		Version: constants.VERSION,
 		Authors: []*cli.Author{
 			&cli.Author{
-				Name: "Lucas Costa", 
+				Name: "costaluu",
 			},
 		},
 		Usage: "flag is a branch-level feature flag manager",
@@ -30,7 +28,7 @@ func main() {
 			commands.CommitsFeaturesCommand,
     	},
 	}
-	
+
     if err := app.Run(os.Args); err != nil {
         log.Fatal(err)
     }
