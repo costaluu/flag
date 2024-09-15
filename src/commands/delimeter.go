@@ -51,10 +51,8 @@ var DelimeterDeleteCommand *cli.Command = &cli.Command{
 	Action: func(ctx *cli.Context) error {
 		args := ctx.Args().Slice()
 		
-		if len(args) != 3 {
-			logger.Result[string](fmt.Sprintf("usage: %s delimeters %s", constants.COMMAND, ctx.Command.ArgsUsage))
-			
-			return nil
+		if len(args) != 1 {
+			logger.Result[string](fmt.Sprintf("usage: %s delimeters %s", constants.COMMAND, ctx.Command.ArgsUsage))			
 		}
 
 		extension := args[0]

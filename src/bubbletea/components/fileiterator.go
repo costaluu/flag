@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/logger"
 	"github.com/costaluu/flag/types"
 )
@@ -56,7 +57,7 @@ func (m IteratorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Everything's been installed. We're done!
 			m.done = true
 			return m, tea.Sequence(
-				tea.Printf("✅ %s", path.Path), // print the last success message
+				tea.Printf("%s %s", constants.CheckMark.Render(), path.Path), // print the last success message
 				tea.Quit,                             // exit the program
 			)
 		}
@@ -65,7 +66,7 @@ func (m IteratorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.index++
 
 		return m, tea.Batch(
-			tea.Printf("✅ %s", path.Path), // print success message above our program
+			tea.Printf("%s %s", constants.CheckMark.Render(), path.Path), // print success message above our program
 			m.runner(m.paths[m.index]),  // process the next path
 		)
 	case spinner.TickMsg:
