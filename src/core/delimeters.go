@@ -71,6 +71,39 @@ func ListDelimeters() {
 	table.RenderTable(headers, data)
 }
 
+func parseDelimeterRegex(delimeter string) string {
+	delimeter = strings.ReplaceAll(delimeter, `\`, `\\`)
+	
+	delimeter = strings.ReplaceAll(delimeter, `(`, `\(`)
+	delimeter = strings.ReplaceAll(delimeter, `)`, `\)`)
+	delimeter = strings.ReplaceAll(delimeter, `.`, `\.`)
+	delimeter = strings.ReplaceAll(delimeter, `^`, `\^`)
+	delimeter = strings.ReplaceAll(delimeter, `$`, `\$`)
+	delimeter = strings.ReplaceAll(delimeter, `+`, `\+`)
+	delimeter = strings.ReplaceAll(delimeter, `?`, `\?`)
+	delimeter = strings.ReplaceAll(delimeter, `{`, `\{`)
+	delimeter = strings.ReplaceAll(delimeter, `}`, `\}`)
+	delimeter = strings.ReplaceAll(delimeter, `[`, `\[`)
+	delimeter = strings.ReplaceAll(delimeter, `]`, `\]`)
+	delimeter = strings.ReplaceAll(delimeter, `|`, `\|`)
+
+	return delimeter
+}
+
+func GetDelimetersFromFileParsedRegex(path string) (string, string) {
+	delimeters := ReadDelimeters()
+
+	extension := filepath.Ext(path)
+
+	delimeter, exists := delimeters[extension]
+
+	if exists {
+		return parseDelimeterRegex(delimeter.Start), parseDelimeterRegex(delimeter.End)
+	}
+
+	return delimeters["default"].Start, delimeters["default"].End
+}
+
 func GetDelimetersFromFile(path string) (string, string) {
 	delimeters := ReadDelimeters()
 

@@ -19,11 +19,12 @@ import (
 )
 
 func ExtractMatchDataFromFile(path string) []types.Match {
+	delimeterStartRegex, delimeterEndRegex := GetDelimetersFromFileParsedRegex(path)
 	delimeterStart, delimeterEnd := GetDelimetersFromFile(path)
 
 	data := filesystem.FileRead(path)
 
-	regexStr := fmt.Sprintf(`%s@(feature|default)\(([^)]{%d,})\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStart, constants.MIN_FEATURE_CHARACTERS, delimeterEnd, delimeterStart, delimeterEnd)
+	regexStr := fmt.Sprintf(`%s@(feature|default)\(([^)]{%d,})\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStartRegex, constants.MIN_FEATURE_CHARACTERS, delimeterEndRegex, delimeterStartRegex, delimeterEndRegex)
 
 	featureRegex := regexp.MustCompile(regexStr)
 
@@ -57,7 +58,7 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 		}
 
 		if hasDefault {
-			regexStr := fmt.Sprintf(`%s@feature\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s@default\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStart, feature, delimeterEnd, delimeterStart, feature, delimeterEnd, delimeterStart, delimeterEnd)
+			regexStr := fmt.Sprintf(`%s@feature\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s@default\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStartRegex, feature, delimeterEndRegex, delimeterStartRegex, feature, delimeterEndRegex, delimeterStartRegex, delimeterEndRegex)
 			completeRegex := regexp.MustCompile(regexStr)
 
 			tempMatches := completeRegex.FindStringSubmatch(matchContent)
@@ -67,7 +68,7 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 				featureContent = tempMatches[2]
 				defaultContent = tempMatches[4]
 			} else {
-				regexString := fmt.Sprintf(`%s@default\(%s\)\s*([^\s]+)?%s([\s\S]*?)%s!feature%s`, delimeterStart, feature, delimeterEnd, delimeterStart, delimeterEnd)
+				regexString := fmt.Sprintf(`%s@default\(%s\)\s*([^\s]+)?%s([\s\S]*?)%s!feature%s`, delimeterStartRegex, feature, delimeterEndRegex, delimeterStartRegex, delimeterEndRegex)
 				onlyDefaultRegex := regexp.MustCompile(regexString)
 
 				tempMatches := onlyDefaultRegex.FindStringSubmatch(matchContent)
@@ -81,7 +82,7 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 				matchType = "DEFAULT"
 			}
 		} else {
-			regexStr := fmt.Sprintf(`%s@feature\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStart, feature, delimeterEnd, delimeterStart, delimeterEnd)
+			regexStr := fmt.Sprintf(`%s@feature\(%s\)\s*([^\s]+)?\s*%s([\s\S]*?)%s!feature%s`, delimeterStartRegex, feature, delimeterEndRegex, delimeterStartRegex, delimeterEndRegex)
 
 			onlyFeatureRegex := regexp.MustCompile(regexStr)
 
