@@ -44,7 +44,7 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 			id = match[3]
 		} else {
 			salt := utils.GetCurrentUnixTimestampInMs()
-			
+
 			id = utils.GenerateId(path, feature, salt)
 		}
 
@@ -326,6 +326,12 @@ func RemoveAllUnsyncedBlocksFromPath(path string) {
 		if feature.Synced == false {
 			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", feature.Id)))
 		}
+	}
+
+	features = ListBlocksFromPath(path)
+
+	if len(features) == 0 {
+		filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 	}
 }
 
