@@ -5,8 +5,9 @@ import "github.com/charmbracelet/lipgloss"
 var (
 	APP_NAME = "flag"
 	COMMAND = "flag"
-	VERSION = "v0.0.1"
+	VERSION = "v0.0.2"
 	MIN_FEATURE_CHARACTERS = 5
+	ID_LENGTH = 25
 )
 
 var (

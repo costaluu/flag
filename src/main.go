@@ -8,7 +8,7 @@ import (
 	"github.com/costaluu/flag/constants"
 	"github.com/urfave/cli/v2"
 )
-
+  
 func main() {
 	app := &cli.App{
 		Name: constants.APP_NAME,

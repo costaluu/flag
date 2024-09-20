@@ -47,6 +47,18 @@ func CreateNewWorkspace() {
 				Start: "<!-- ",
 				End: " -->",
 			},
+			".html": {
+				Start: "<!-- ",
+				End: " -->",
+			},
+			".cc": {
+				Start: "// ",
+				End: " //",
+			},
+			".cpp": {
+				Start: "// ",
+				End: " //",
+			},
 			".go": {
 				Start: "// ",
 				End: " //",
@@ -63,7 +75,7 @@ func CreateNewWorkspace() {
 
 	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 
-	logger.Success[string]("folder .features created!")
+	logger.Success[string]("folder .features created")
 }
 
 func WorkspaceReport() {

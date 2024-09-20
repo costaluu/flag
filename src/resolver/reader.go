@@ -42,7 +42,7 @@ func (flr *FileLineReader) ReadLine(lineNumber int) (string, error) {
 			resultLine := scanner.Text()
 			
 			if strings.HasPrefix(resultLine, "<<<<<<<") || strings.HasPrefix(resultLine, ">>>>>>>") {
-				return "", fmt.Errorf("Found another conflict!")
+				return "", fmt.Errorf("Found another conflict")
 			}
 
 			return resultLine, nil

@@ -249,5 +249,9 @@ func Sync() {
 		}
 	}
 
+	fmt.Println("sync comecou")
+
 	components.FileIterator(arrayFile, runner)
+
+	fmt.Println("sync terminou")
 }

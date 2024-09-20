@@ -249,12 +249,11 @@ func CommitBase(path string, skipForm bool) {
 }
 
 func CommitNewFeature(path string, name string, skipForm bool, finalMessage bool) {
-	timestamp := utils.GenerateCurrentTimeStampString()
-
 	var rootDir string = git.GetRepositoryRoot()
 	hashedPath := utils.HashFilePath(path)
 	features := GetCommitFeaturesFromPath(hashedPath)
 
+	var featureExists bool = false
 	var hasOtherFeaturesTurnedOn bool
 	var featureIdsTurnedOn []string = []string{}
 	var featureNamesTurnedOn []string = []string{}
@@ -263,11 +262,17 @@ func CommitNewFeature(path string, name string, skipForm bool, finalMessage bool
 		if feature.State == constants.STATE_ON {
 			if feature.Name != name {
 				hasOtherFeaturesTurnedOn = true
+			} else {
+				featureExists = true
 			}
 
 			featureIdsTurnedOn = append(featureIdsTurnedOn, feature.Id)
 			featureNamesTurnedOn = append(featureNamesTurnedOn, feature.Name)
 		}
+	}
+
+	if featureExists {
+		logger.Result[string](fmt.Sprintf("feature %s already exists"))
 	}
 		
 	if !skipForm && hasOtherFeaturesTurnedOn {
@@ -289,7 +294,7 @@ func CommitNewFeature(path string, name string, skipForm bool, finalMessage bool
 	}
 
 	var newFeature types.CommitFeature
-	var id string = utils.GenerateId()
+	var id string = utils.GenerateId(path, name)
 
 	featureIdsTurnedOn = append(featureIdsTurnedOn, id)
 
@@ -302,13 +307,14 @@ func CommitNewFeature(path string, name string, skipForm bool, finalMessage bool
 	featureNamesTurnedOn = append(featureNamesTurnedOn, name)
 	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), []string{newFeature.Id}, timestamp + newRecordCheckSum)
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newRecordCheckSum))
+	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), []string{newFeature.Id}, strings.Join([]string{newFeature.Id, newRecordCheckSum}, "+"))
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, strings.Join([]string{newFeature.Id, newRecordCheckSum}, "+")))
 	
 	if hasOtherFeaturesTurnedOn {
-		timestamp = utils.GenerateCurrentTimeStampString()		
-		workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), featureIdsTurnedOn, timestamp + newRecordCheckSum)
-		filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newRecordCheckSum))
+		newVersionChecksum := strings.Join(append(featureIdsTurnedOn, newRecordCheckSum), "+")
+
+		workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), featureIdsTurnedOn, newVersionChecksum)
+		filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
 	}
 
 	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "commits", hashedPath, fmt.Sprintf("%s.feature", newFeature.Id)), newFeature)
@@ -346,10 +352,10 @@ func CommitSaveToCurrentState(path string) {
 	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "commits", hashedPath, constants.WorkingTreeDirectory, checksum))
 
 	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
-	timestamp := utils.GenerateCurrentTimeStampString()
+	newVersionChecksum := strings.Join(append(currentFeaturesIdsTurnedOn, newRecordCheckSum), "+")
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), currentFeaturesIdsTurnedOn, timestamp + newRecordCheckSum)
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newRecordCheckSum))
+	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), currentFeaturesIdsTurnedOn, newVersionChecksum)
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
 
 	BuildBaseForFile(path)
 }
@@ -437,10 +443,10 @@ func CommitSave(path string, finalMessage bool) {
 	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "commits", hashedPath, constants.WorkingTreeDirectory, checksum))
 
 	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
-	timestamp := utils.GenerateCurrentTimeStampString()
+	newVersionChecksum := strings.Join(append(workingtree.StringToStringSlice(selected.ItemValue), newRecordCheckSum), "+")
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), workingtree.StringToStringSlice(selected.ItemValue), timestamp + newRecordCheckSum)
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newRecordCheckSum))
+	workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), workingtree.StringToStringSlice(selected.ItemValue), newVersionChecksum)
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
 
 	BuildBaseForFile(path)
 
@@ -653,11 +659,11 @@ func BuildBaseForFile(path string) {
 				
 				newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
 
-				timestamp := utils.GenerateCurrentTimeStampString()
+				newVersionChecksum := strings.Join(append(nearPrefix, newCheckSum), "+")
 
-				workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), nearPrefix, timestamp + newCheckSum)
+				workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), nearPrefix, newVersionChecksum)
 
-				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newCheckSum))
+				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
 			}
 		
 			filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, path))
@@ -781,12 +787,12 @@ func RebaseFile(path string, finalMessage bool) {
 		)
 
 		newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
-		timestamp := utils.GenerateCurrentTimeStampString()
+		newVersionChecksum := strings.Join(append(featureIds, newCheckSum), "+")
 
 		filesystem.RemoveFile(filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, checksum))
 
-		workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), featureIds, timestamp + newCheckSum)
-		filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, timestamp + newCheckSum))
+		workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), featureIds, newVersionChecksum)
+		filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
 	}
 
 	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "merge-tmp"))
@@ -1159,11 +1165,11 @@ func CommitPromoteOnPath(fullPath string, parsedPath string, featureNamesToPromo
 				workingtree.Remove(filepath.Join(rootDir, ".features", "commits", hashedPath), ids)
 				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "commits", hashedPath, constants.WorkingTreeDirectory, checksum))
 
-				newChecksum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
-				timestamp := utils.GenerateCurrentTimeStampString()
+				newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
+				newVersionChecksum := strings.Join(append(idsSlice, newCheckSum), "+")
 
-				workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), idsSlice, timestamp + newChecksum)
-				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, constants.WorkingTreeDirectory, timestamp + newChecksum))
+				workingtree.Add(filepath.Join(rootDir, ".features", "commits", hashedPath), idsSlice, newVersionChecksum)
+				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "commits", hashedPath, constants.WorkingTreeDirectory, newVersionChecksum))
 			}
 
 			// Change base to the feature/state promoted

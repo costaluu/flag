@@ -4,26 +4,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"time"
 
+	"github.com/costaluu/flag/constants"
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
 	"github.com/gobwas/glob"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 )
-
-func GenerateCurrentTimeStampString() string {
-	currentTime := time.Now()
-	unixMilliseconds := currentTime.UnixNano() / int64(time.Millisecond)
-
-	return strconv.FormatInt(unixMilliseconds, 10)
-}
 
 // Filter applies a predicate function to each element in the input slice
 // and returns a new slice containing only the elements that satisfy the predicate.
@@ -57,17 +47,11 @@ func GenerateCheckSumFromString(str string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func GenerateId() string {
-	nanoId, err := gonanoid.New(16)
-
-	if err != nil {
-		logger.Fatal[error](err)
-	}
-
-	currentTime := time.Now()
-	unixMilliseconds := currentTime.UnixNano() / int64(time.Millisecond)
-
-	return fmt.Sprintf("%d%s", unixMilliseconds, nanoId)
+func GenerateId(seeds ...string) string {
+	hash := sha256.Sum256([]byte(strings.Join(seeds, "")))
+    hexHash := hex.EncodeToString(hash[:])
+    
+	return hexHash[:constants.ID_LENGTH]
 }
 
 func HashFilePath(filePath string) string {

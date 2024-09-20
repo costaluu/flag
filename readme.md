@@ -1,9 +1,9 @@
 # Flag
 
-**Flag** is a branch-level feature flag manager designed to enable feature toggling at the file level. With deep integration into Git, Flag automatically adapts files in your repository based on which features are turned on or off.
+**Flag** is a configuration-based feature flag manager. Works on top of Git, Flag automatically adapts files in your repository based on which features are turned on or off.
 
 > [!WARNING]
-> Disclaimer: This system is currently in Beta. Use with caution in production environments.
+> Disclaimer: Use with caution in production environments.
 
 ## Table of Contents
 

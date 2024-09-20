@@ -56,6 +56,8 @@ func (m IteratorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.index >= len(m.paths)-1 {
 			// Everything's been installed. We're done!
 			m.done = true
+
+			fmt.Println("finalizou terminou")
 			return m, tea.Sequence(
 				tea.Printf("%s %s", constants.CheckMark.Render(), path.Path), // print the last success message
 				tea.Quit,                             // exit the program
@@ -112,8 +114,11 @@ func FileIterator(list []types.FilePathCategory, run func (parameter types.FileP
 
 	model := newIteratorModel(list, runner)
 
+	fmt.Println("file operator comecou")
+
 	if _, err := tea.NewProgram(model).Run(); err != nil {
 		logger.Fatal[error](err)
 	}
 
+	fmt.Println("file operator terminou")
 }

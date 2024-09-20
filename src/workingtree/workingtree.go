@@ -28,7 +28,7 @@ func LoadWorkingTree(path string) WorkingTree {
 	fileExists := filesystem.FileExists(filepath.Join(path, WorkingTreeFile))
 
 	if !fileExists {
-		logger.Result[string]("Working tree file not found!")
+		logger.Result[string]("Working tree file not found")
 	}
 
 	var tree WorkingTree

@@ -16,6 +16,7 @@ import (
 	"github.com/costaluu/flag/table"
 	"github.com/costaluu/flag/types"
 	"github.com/costaluu/flag/utils"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 func ExtractMatchDataFromFile(path string) []types.Match {
@@ -43,7 +44,13 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 			foundId = true
 			id = match[3]
 		} else {
-			id = utils.GenerateId()
+			nanoId, err := gonanoid.New(16)
+
+			if err != nil {
+				logger.Fatal[error](err)
+			}
+			
+			id = utils.GenerateId(path, feature, nanoId)
 		}
 
 		var featureContent string

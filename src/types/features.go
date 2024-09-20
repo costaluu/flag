@@ -33,12 +33,6 @@ type BlockFeature struct {
 	SwapContent string `json:"swapContent"`
 }
 
-type LinkFeature struct {
-	Name   string `json:"name"`
-	State  string `json:"state"`
-	Synced bool   `json:"synced"`
-}
-
 type CommitFeature struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
