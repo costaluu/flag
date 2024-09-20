@@ -43,9 +43,9 @@ jobs:
                   # Zip only the linux, macos, and windows folders without the full path
                   cd $OUTPUT_DIR
 
-                  zip -r flag-windows.zip windows/$BINARY_NAME.exe
-                  zip -r flag-linux.zip linux/$BINARY_NAME
-                  zip -r flag-macos.zip macos/$BINARY_NAME
+                  zip flag-windows.zip windows/$BINARY_NAME.exe
+                  zip flag-linux.zip linux/$BINARY_NAME
+                  zip flag-macos.zip macos/$BINARY_NAME
 
             - name: List contents of bin directory
               run: |
