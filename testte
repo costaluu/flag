@@ -1,0 +1,11 @@
+// @feature(myFeature) 0425d93af137876a700909982 //
+teste
+// @default(myFeature) 0425d93af137876a700909982 //
+teste
+// !feature //
+
+// @feature(myFeature) d86c5b75ada871b079894a3ac //
+teste
+// @default(myFeature) d86c5b75ada871b079894a3ac //
+teste
+// !feature //

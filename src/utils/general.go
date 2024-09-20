@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/costaluu/flag/constants"
 	filesystem "github.com/costaluu/flag/fs"
@@ -45,6 +47,14 @@ func GenerateCheckSumFromString(str string) string {
 	hash.Write([]byte(str))
 
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func GetCurrentUnixTimestampInMs() string {
+    // Get the current time and convert it to milliseconds
+    timestampMs := time.Now().UnixNano() / int64(time.Millisecond)
+    
+    // Convert the timestamp to a string
+    return strconv.FormatInt(timestampMs, 10)
 }
 
 func GenerateId(seeds ...string) string {
