@@ -18,6 +18,29 @@ import (
 	"github.com/costaluu/flag/utils"
 )
 
+func findFirstLineMatch(path string, matchContent string) int {
+	splitedMatchConent := strings.Split(matchContent, "\n")
+	data := filesystem.FileRead(path)
+	splitedData := strings.Split(data, "\n")
+	
+	for i := 0; i < len(splitedData); i++ {
+		var found bool = true
+
+		for j := 0; j < len(splitedMatchConent) && i + j < len(splitedData); j++ {
+			if strings.TrimSpace(splitedData[i + j]) != strings.TrimSpace(splitedMatchConent[j]) {
+				found = false
+				break;
+			}
+		}
+
+		if found {
+			return i + 1
+		}
+	}
+
+	return -1
+}
+
 func ExtractMatchDataFromFile(path string) []types.Match {
 	delimeterStartRegex, delimeterEndRegex := GetDelimetersFromFileParsedRegex(path)
 	delimeterStart, delimeterEnd := GetDelimetersFromFile(path)
@@ -43,9 +66,13 @@ func ExtractMatchDataFromFile(path string) []types.Match {
 			foundId = true
 			id = match[3]
 		} else {
-			salt := utils.GetCurrentUnixTimestampInMs()
+			salt := findFirstLineMatch(path, matchContent)
 
-			id = utils.GenerateId(path, feature, salt)
+			if salt == -1 {
+				continue
+			}
+
+			id = utils.GenerateId(path, feature, fmt.Sprintf("%d", salt))
 		}
 
 		var featureContent string

@@ -249,5 +249,9 @@ func Sync() {
 		}
 	}
 
-	components.FileIterator(arrayFile, runner)
+	for _, path := range arrayFile {
+		runner(path)
+
+		fmt.Printf("%s %s\n", constants.CheckMark.Render(), path.Path)
+	}
 }
