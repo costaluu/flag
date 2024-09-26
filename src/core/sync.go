@@ -90,7 +90,7 @@ func handleVersion(path string) {
 				options = newOptions
 			}
 			
-			logger.Info[string](fmt.Sprintf("We detected untracked changes on %s that is a version base\n", path))
+			logger.Info[string](fmt.Sprintf("we detected untracked changes on %s that is a version base\n", path))
 
 			selected := components.FormSelect("What should we do?", options)
 
@@ -195,7 +195,7 @@ func Sync() {
 	workspaceExists := CheckWorkspaceFolder()
 
 	if !workspaceExists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	fmt.Println(workspaceExists)

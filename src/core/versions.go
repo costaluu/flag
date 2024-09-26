@@ -218,7 +218,7 @@ func VersionBase(path string, skipForm bool) {
 	var rootDir string = git.GetRepositoryRoot()
 
 	if !workspaceExists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	hashedPath := utils.HashFilePath(path)
@@ -345,7 +345,7 @@ func VersionSaveToCurrentState(path string) {
 	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(key))
 
 	if !exists {
-		logger.Result[string]("Could not found state")
+		logger.Result[string]("could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), key)
@@ -436,7 +436,7 @@ func VersionSave(path string, finalMessage bool) {
 	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(selected.ItemValue))
 
 	if !exists {
-		logger.Result[string]("Could not found state")
+		logger.Result[string]("could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), selected.ItemValue)
@@ -563,7 +563,7 @@ func BuildBaseForFile(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
 	if !workspaceExists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	hashedPath := utils.HashFilePath(path)
@@ -600,7 +600,7 @@ func BuildBaseForFile(path string) {
 			tempStateCheckSum, exists := tree[nearPrefixKey]
 			
 			if !exists {
-				logger.Result[string]("Build base: couldn't find temp state")
+				logger.Result[string]("build base: couldn't find temp state")
 			}
 			
 			var tempStateName string
@@ -626,7 +626,7 @@ func BuildBaseForFile(path string) {
 				soloFeatureCheckSum, exists := tree[fmt.Sprintf("[%s]", featureRemainingId)]
 
 				if !exists {
-					logger.Result[string]("Build base: couldn't find feature for building temp state")
+					logger.Result[string]("build base: couldn't find feature for building temp state")
 				}
 
 				var featureName string = ""
@@ -639,7 +639,7 @@ func BuildBaseForFile(path string) {
 				}
 
 				if featureName == "" {
-					logger.Result[string]("Build base: couldn't find feature name for building temp state")
+					logger.Result[string]("build base: couldn't find feature name for building temp state")
 				}
 
 				styledTempStateName := lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor)).SetString(tempStateName).Bold(true)
@@ -682,7 +682,7 @@ func LookForChangesInBase(path string) bool {
 	var rootDir string = git.GetRepositoryRoot()
 
 	if !workspaceExists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	hashedPath := utils.HashFilePath(path)
@@ -717,7 +717,7 @@ func LookForChangesInBase(path string) bool {
 		_, currentStateCheckSum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), currentStateFeatures)
 
 		if !exists {
-			logger.Result[string]("Can not find current state")
+			logger.Result[string]("can not find current state")
 		}
 
 		currentCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
@@ -732,7 +732,7 @@ func RebaseFile(path string, finalMessage bool) {
 	var rootDir string = git.GetRepositoryRoot()
 
 	if !workspaceExists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	hashedPath := utils.HashFilePath(path)
@@ -823,7 +823,7 @@ func AllVersionFeatureDetails() {
 	exists := CheckWorkspaceFolder()
 
 	if !exists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	var titleStyle = 
@@ -1194,7 +1194,7 @@ func VersionPromote(finalMessage bool) {
 	exists := CheckWorkspaceFolder()
 
 	if !exists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	var foldersToDelete []string = []string{}
@@ -1249,7 +1249,7 @@ func VersionDemote(finalMessage bool) {
 	exists := CheckWorkspaceFolder()
 
 	if !exists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	var foldersToDelete []string = []string{}

@@ -82,7 +82,7 @@ func WorkspaceReport() {
 	exists := CheckWorkspaceFolder()
 
 	if !exists {
-		logger.Result[string]("Workspace not found, use flag init")
+		logger.Result[string]("workspace not found, use flag init")
 	}
 
 	AllBlocksDetails()

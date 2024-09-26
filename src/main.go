@@ -26,6 +26,7 @@ func main() {
 			commands.DelimeterCommand,
 			commands.BlocksFeaturesCommand,
 			commands.VersionsFeaturesCommand,
+			commands.UpdateCommand,
     	},
 	}
 
