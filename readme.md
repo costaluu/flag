@@ -11,7 +11,7 @@
 -   [Key Features](#key-features)
 -   [Blocks](#blocks)
 -   [Delimiters](#delimiters)
--   [Commits](#commits)
+-   [Versions](#versions)
 -   [Commands](#commands)
 -   [Getting Started](#getting-started)
 
@@ -21,7 +21,7 @@
 
 Feature flagging has become a critical tool for controlled feature deployment, but **Flag** takes this to the next level by allowing feature toggling at the **file level**. Instead of toggling functionality purely in code, Flag modifies actual file content based on active features.
 
-By leveraging Git, Flag ensures that changes are versioned, tracked, and consistent across your codebase. Features can be managed dynamically through **blocks**, **delimiters**, and **commits**, with seamless Git integration to track every change.
+By leveraging Git, Flag ensures that changes are versioned, tracked, and consistent across your codebase. Features can be managed dynamically through **blocks**, **delimiters**, and **versions**, with seamless Git integration to track every change.
 
 ---
 
@@ -29,7 +29,7 @@ By leveraging Git, Flag ensures that changes are versioned, tracked, and consist
 
 -   **File-based Feature Toggling**: Modify file content dynamically based on active features.
 -   **Git Integration**: Works only within Git repositories for version control and tracking.
--   **Blocks, Delimiters, and Commits**: Three core concepts for managing features in code and configuration files.
+-   **Blocks, Delimiters, and Versions**: Three core concepts for managing features in code and configuration files.
 -   **Branch-based**: Feature flags are isolated at the branch level, allowing for granular control.
 
 ---
@@ -72,13 +72,13 @@ These operations let you fully control how Flag identifies and processes blocks 
 
 ---
 
-## Commits
+## Versions
 
-In cases where block delimiters are not allowed (such as JSON files, which do not support comments), Flag uses Commits to manage features.
+In cases where block delimiters are not allowed (such as JSON files, which do not support comments), Flag uses Versions to manage features.
 
-### Commit Workflow:
+### Version Workflow:
 
-1. Create a base commit: `flag commits base`
+1. Create a base version: `flag versions base`
    This creates a base reference of the files to start tracking features.
 2. Sync features
 
@@ -110,7 +110,7 @@ COMMANDS:
    report      shows a workspace report of features
    delimeters  operations for delimiters
    blocks      operations for block features
-   commits     operations for commit-based features
+   versions     operations for version-based features
    help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -126,4 +126,4 @@ GLOBAL OPTIONS:
 2. Initialize Workspace: Run flag init to create a new workspace in your Git repository.
 3. Define Feature Blocks: Use the @feature and @default block structure in your files.
 4. Manage Delimiters: Set up delimiters using flag delimeters set.
-5. Handle Files Without Comments: Use commits-based tracking with flag commits base and flag sync.
+5. Handle Files Without Comments: Use versions-based tracking with flag versions base and flag sync.

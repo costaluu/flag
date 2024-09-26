@@ -25,7 +25,7 @@ func main() {
 			commands.ReportCommand,
 			commands.DelimeterCommand,
 			commands.BlocksFeaturesCommand,
-			commands.CommitsFeaturesCommand,
+			commands.VersionsFeaturesCommand,
     	},
 	}
 

@@ -27,34 +27,34 @@ func handleDeleted(path string) {
 		filesystem.FileDeleteFolder(filepath.Join(rootDir, "blocks", hashedPath))
 	}
 
-	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, "commits", hashedPath))
+	versionExists := filesystem.FileFolderExists(filepath.Join(rootDir, "versions", hashedPath))
 	
-	if commitExists {
-		filesystem.FileDeleteFolder(filepath.Join(rootDir, "commits", hashedPath))
+	if versionExists {
+		filesystem.FileDeleteFolder(filepath.Join(rootDir, "versions", hashedPath))
 	}
 }
 
-func handleCommit(path string) {
+func handleVersion(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
 	hashedPath := utils.HashFilePath(path)
 
-	commitExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "commits", hashedPath))
+	versionExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
-	if commitExists {	
+	if versionExists {	
 		hasChangesWithoutSave := LookForChangesInBase(path)
 		name := GetCurrentStateName(path)
-		tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "commits", hashedPath))
-		features := GetCommitFeaturesFromPath(hashedPath)
+		tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
+		features := GetVersionFeaturesFromPath(hashedPath)
 
 		if hasChangesWithoutSave {
 			var options []huh.Option[string] = []huh.Option[string]{
 						huh.Option[string]{
-							Key: "Commit changes to the current feature/state" + fmt.Sprintf(" (%s)", name),
+							Key: "Save changes to the current feature/state" + fmt.Sprintf(" (%s)", name),
 							Value: "save to current state",
 						},
 						huh.Option[string]{
-							Key: "Commit changes to a specific feature/state",
+							Key: "Save changes to a specific feature/state",
 							Value: "save to feature/state",
 						},
 						huh.Option[string]{
@@ -90,12 +90,12 @@ func handleCommit(path string) {
 				options = newOptions
 			}
 			
-			logger.Info[string](fmt.Sprintf("We detected untracked changes on %s that is a base commit\n", path))
+			logger.Info[string](fmt.Sprintf("We detected untracked changes on %s that is a version base\n", path))
 
 			selected := components.FormSelect("What should we do?", options)
 
 			if selected == "update base" {
-				CommitUpdateBase(path, false)
+				VersionUpdateBase(path, false)
 			} else if selected == "rebase" {
 				RebaseFile(path, false)
 			} else if selected == "create feature" {
@@ -115,11 +115,11 @@ func handleCommit(path string) {
 					return nil
 				})
 
-				CommitNewFeature(path, featureName, false, false)
+				VersionNewFeature(path, featureName, false, false)
 			} else if selected == "save to current state" {
-				CommitSaveToCurrentState(path)
+				VersionSaveToCurrentState(path)
 			} else if selected == "save to feature/state" {
-				CommitSave(path, false)
+				VersionSave(path, false)
 			} else {
 				BuildBaseForFile(path)
 			}
@@ -197,6 +197,10 @@ func Sync() {
 	if !workspaceExists {
 		logger.Result[string]("Workspace not found, use flag init")
 	}
+
+	fmt.Println(workspaceExists)
+
+	logger.Debug()
 	
 	var files map[string]types.FilePathCategory = make(map[string]types.FilePathCategory)
 
@@ -241,10 +245,10 @@ func Sync() {
 				handleDeleted(path.Path)
 			} else if action == "modified" {
 				HandleBlock(path.Path)
-				handleCommit(path.Path)
+				handleVersion(path.Path)
 			} else {
 				HandleBlock(path.Path)
-				handleCommit(path.Path)
+				handleVersion(path.Path)
 			}
 		}
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var CommitsFeaturesToggleCommand *cli.Command = &cli.Command{
+var VersionsFeaturesToggleCommand *cli.Command = &cli.Command{
 	Name:      "toggle",
 	Usage:     "toggle a feature to on or off",
 	ArgsUsage: `<feature_name> <on|off>`,
@@ -19,7 +19,7 @@ var CommitsFeaturesToggleCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 2 {
-			logger.Result[string](fmt.Sprintf("usage: %s commits %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
+			logger.Result[string](fmt.Sprintf("usage: %s versions %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
 		}
 
 		state := strings.ToUpper(args[1])
@@ -28,51 +28,51 @@ var CommitsFeaturesToggleCommand *cli.Command = &cli.Command{
 			logger.Result[string]("invalid state. use on|off")
 		}
 
-		core.ToggleCommitFeature(args[0], state)
+		core.ToggleVersionFeature(args[0], state)
 
 		return nil
 	},
 }
 
-var CommitsFeaturesPromoteCommand *cli.Command = &cli.Command{
+var VersionsFeaturesPromoteCommand *cli.Command = &cli.Command{
 	Name:      "promote",
 	Usage:     "promote a feature or state",
 	Action: func(ctx *cli.Context) error {
-		core.CommitPromote(true)
+		core.VersionPromote(true)
 
 		return nil
 	},
 }
 
-var CommitsFeaturesDemoteCommand *cli.Command = &cli.Command{
+var VersionsFeaturesDemoteCommand *cli.Command = &cli.Command{
 	Name:      "demote",
 	Usage:     "demote a feature",
 	ArgsUsage: `<feature_name>`,
 	Action: func(ctx *cli.Context) error {
-		core.CommitDemote(true)
+		core.VersionDemote(true)
 
 		return nil
 	},
 }
 
-var CommitsFeaturesBaseCommand *cli.Command = &cli.Command{
+var VersionsFeaturesBaseCommand *cli.Command = &cli.Command{
 	Name:      "base",
-	Usage:     "create a base commit feature",
+	Usage:     "create a base for a feature",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{Name: "skip-form", Aliases: []string{"sf"}},
 	},
 	Action: func(ctx *cli.Context) error {
-		selectedItem := utils.PickAllFiles("Pick a file to make a commit base")
+		selectedItem := utils.PickAllFiles("Pick a file to make a base verrsion")
 
 		if selectedItem.ItemTitle != "" {
-			core.CommitBase(selectedItem.ItemTitle, ctx.Bool("skip-form"))
+			core.VersionBase(selectedItem.ItemTitle, ctx.Bool("skip-form"))
 		}
 
 		return nil
 	},
 }
 
-var CommitsFeaturesNewFeatureCommand *cli.Command = &cli.Command{
+var VersionsFeaturesNewFeatureCommand *cli.Command = &cli.Command{
 	Name:      "new-feature",
 	Usage:     "create a new feature with the current changes of a file",
 	ArgsUsage: `<feature_name>`,
@@ -83,76 +83,76 @@ var CommitsFeaturesNewFeatureCommand *cli.Command = &cli.Command{
 		args := ctx.Args().Slice()
 
 		if len(args) < 1 {
-			logger.Result[string](fmt.Sprintf("usage: %s commits %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
+			logger.Result[string](fmt.Sprintf("usage: %s versions %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))
 		}
 
 		if len(args[0]) < constants.MIN_FEATURE_CHARACTERS {
 			logger.Result[string](fmt.Sprintf("a feature name should have at least %d characters", constants.MIN_FEATURE_CHARACTERS))
 		}
 
-		selectedItem := utils.PickModifedOrUntrackedFiles("Select the commit base that the new feature will be created")
+		selectedItem := utils.PickModifedOrUntrackedFiles("Select the base version that the new feature will be created")
 
 		if selectedItem.ItemTitle != "" {
-			core.CommitNewFeature(selectedItem.ItemTitle, args[0], ctx.Bool("skip-form"), true)
+			core.VersionNewFeature(selectedItem.ItemTitle, args[0], ctx.Bool("skip-form"), true)
 		}
 
 		return nil
 	},
 }
 
-var CommitsFeaturesSaveCommand *cli.Command = &cli.Command{
+var VersionsFeaturesSaveCommand *cli.Command = &cli.Command{
 	Name:      "save",
 	Usage:     "save current changes of a file to a feature or state",
 	Action: func(ctx *cli.Context) error {
-		selectedItem := utils.PickModifedOrUntrackedFiles("Select the commit base that the changes will be saved")
+		selectedItem := utils.PickModifedOrUntrackedFiles("Select the base version that the changes will be saved")
 
 		if selectedItem.ItemTitle != "" {
-			core.CommitSave(selectedItem.ItemTitle, true)
+			core.VersionSave(selectedItem.ItemTitle, true)
 		}
 
 		return nil
 	},
 }
 
-var CommitsFeaturesDeleteCommand *cli.Command = &cli.Command{
+var VersionsFeaturesDeleteCommand *cli.Command = &cli.Command{
 	Name:      "delete",
 	Usage:     "delete a feature or state",
 	Action: func(ctx *cli.Context) error {
-		selectedItem := utils.PickModifedOrUntrackedFiles("Select the commit base to delete")
+		selectedItem := utils.PickModifedOrUntrackedFiles("Select the base version base to delete")
 
 		if selectedItem.ItemTitle != "" {
-			core.CommitDelete(selectedItem.ItemTitle, true)
+			core.VersionDelete(selectedItem.ItemTitle, true)
 		}
 
 		return nil
 	},
 }
 
-var CommitsFeaturesDetailsCommand *cli.Command = &cli.Command{
+var VersionsFeaturesDetailsCommand *cli.Command = &cli.Command{
 	Name:      "details",
-	Usage:     "show a report for a commit base",
+	Usage:     "shows a feature report of a base version",
 	Action: func(ctx *cli.Context) error {
 		selectedItem := utils.PickAllFiles("Pick a file to show details")
 
 		if selectedItem.ItemTitle != "" {
-			core.CommitDetailsFromPath(selectedItem.ItemTitle)
+			core.VersionFeatureDetailsFromPath(selectedItem.ItemTitle)
 		}
 
 		return nil
 	},
 }
 
-var CommitsFeaturesCommand *cli.Command = &cli.Command{
-	Name:  "commits",
-	Usage: "operations for commits features",
+var VersionsFeaturesCommand *cli.Command = &cli.Command{
+	Name:  "versions",
+	Usage: "operations for versions features",
 	Subcommands: []*cli.Command{
-		CommitsFeaturesToggleCommand,
-		CommitsFeaturesPromoteCommand,
-		CommitsFeaturesDemoteCommand,
-		CommitsFeaturesBaseCommand,
-		CommitsFeaturesNewFeatureCommand,
-		CommitsFeaturesSaveCommand,
-		CommitsFeaturesDeleteCommand,
-		CommitsFeaturesDetailsCommand,
+		VersionsFeaturesToggleCommand,
+		VersionsFeaturesPromoteCommand,
+		VersionsFeaturesDemoteCommand,
+		VersionsFeaturesBaseCommand,
+		VersionsFeaturesNewFeatureCommand,
+		VersionsFeaturesSaveCommand,
+		VersionsFeaturesDeleteCommand,
+		VersionsFeaturesDetailsCommand,
 	},
 }

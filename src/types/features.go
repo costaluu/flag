@@ -33,7 +33,7 @@ type BlockFeature struct {
 	SwapContent string `json:"swapContent"`
 }
 
-type CommitFeature struct {
+type VersionFeature struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	State string `json:"state"`

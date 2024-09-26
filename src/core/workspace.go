@@ -22,21 +22,21 @@ func CheckWorkspaceFolder() bool {
 		logger.Fatal[error](err)
 	}
 
-	return true
+	versionsExists := filesystem.FileFolderExists(filepath.Join(repoRoot, ".features", "versions"))
+	blocksExists := filesystem.FileFolderExists(filepath.Join(repoRoot, ".features", "blocks"))
+	delimetersExists := filesystem.FileExists(filepath.Join(repoRoot, ".features", "delimeters"))
+
+	return versionsExists && blocksExists && delimetersExists
 }
 
 func CreateNewWorkspace() {
-	workspaceExists := CheckWorkspaceFolder()
-
 	var rootDir string = git.GetRepositoryRoot()
 
-	if workspaceExists {
-		filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features"))
-	}
+	filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features"))
 
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features"))
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks"))
-	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "commits"))
+	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions"))
 
 	var delimeters types.Delimeters = map[string]types.Delimeter{
 			".xqy": {
@@ -86,5 +86,5 @@ func WorkspaceReport() {
 	}
 
 	AllBlocksDetails()
-	AllCommitDetails()
+	AllVersionFeatureDetails()
 }

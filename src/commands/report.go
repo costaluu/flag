@@ -9,14 +9,14 @@ var ReportCommand *cli.Command = &cli.Command{
 	Name:    "report",
 	Usage:   "shows a workspace report of features",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "commits", Aliases: []string{"c"}},
+		&cli.BoolFlag{Name: "versions", Aliases: []string{"c"}},
 		&cli.BoolFlag{Name: "blocks", Aliases: []string{"b"}},
 	},
 	Action: func(ctx *cli.Context) error {
-		if ctx.Bool("commits") && ctx.Bool("blocks") {
+		if ctx.Bool("versions") && ctx.Bool("blocks") {
 			core.WorkspaceReport()
-		} else if ctx.Bool("commits") {
-			core.AllCommitDetails()
+		} else if ctx.Bool("versions") {
+			core.AllVersionFeatureDetails()
 		} else if ctx.Bool("blocks") {
 			core.AllBlocksDetails()
 		} else {
