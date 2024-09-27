@@ -197,10 +197,6 @@ func Sync() {
 	if !workspaceExists {
 		logger.Result[string]("workspace not found, use flag init")
 	}
-
-	fmt.Println(workspaceExists)
-
-	logger.Debug()
 	
 	var files map[string]types.FilePathCategory = make(map[string]types.FilePathCategory)
 
