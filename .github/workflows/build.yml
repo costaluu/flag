@@ -23,6 +23,17 @@ jobs:
               with:
                   go-version: 1.23
 
+            - name: Retrieve current version
+              id: get_version
+              run: |
+                  VERSION=$(echo "${{ secrets.CURRENT_VERSION }}" | cut -d 'v' -f 2)
+                  MAJOR=$(echo $VERSION | cut -d '.' -f 1)
+                  MINOR=$(echo $VERSION | cut -d '.' -f 2)
+                  PATCH=$(echo $VERSION | cut -d '.' -f 3)
+                  NEW_PATCH=$((PATCH + 1))
+                  NEW_VERSION="v$MAJOR.$MINOR.$NEW_PATCH"
+                  echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
             - name: Build for Linux, macOS, and Windows
               run: |
                   GIT_WORKSPACE="${{ github.workspace }}"
@@ -32,13 +43,13 @@ jobs:
                   cd $GIT_WORKSPACE/src # Change to the src directory
 
                   # Build for Linux
-                  GOOS=linux GOARCH=amd64 go build -trimpath -o $OUTPUT_DIR/linux/$BINARY_NAME
+                  GOOS=linux GOARCH=amd64 go build -ldflags="-X main.VERSION=${{ env.NEW_VERSION }}" -trimpath -o $OUTPUT_DIR/linux/$BINARY_NAME
 
                   # Build for macOS
-                  GOOS=darwin GOARCH=amd64 go build -trimpath -o $OUTPUT_DIR/macos/$BINARY_NAME
+                  GOOS=darwin GOARCH=amd64 go build -ldflags="-X main.VERSION=${{ env.NEW_VERSION }}" -trimpath -o $OUTPUT_DIR/macos/$BINARY_NAME
 
                   # Build for Windows
-                  GOOS=windows GOARCH=amd64 go build -trimpath -o $OUTPUT_DIR/windows/$BINARY_NAME.exe
+                  GOOS=windows GOARCH=amd64 go build -ldflags="-X main.VERSION=${{ env.NEW_VERSION }}" -trimpath -o $OUTPUT_DIR/windows/$BINARY_NAME.exe
 
                   # Zip only the linux, macos, and windows folders without the full path
                   cd $OUTPUT_DIR
@@ -60,7 +71,7 @@ jobs:
 
             - name: Set Release Version
               id: set_version
-              run: echo "RELEASE_VERSION=$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
+              run: echo "RELEASE_VERSION=${{ env.NEW_VERSION }}" >> $GITHUB_ENV
 
             - name: Create Release
               id: create_release
@@ -102,3 +113,11 @@ jobs:
                   asset_content_type: application/zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Update Version Secret
+              run: |
+                  curl -X PATCH \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/actions/secrets/CURRENT_VERSION \
+                  -d '{"encrypted_value":"v$MAJOR.$MINOR.$NEW_PATCH"}'

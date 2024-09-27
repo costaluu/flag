@@ -8,11 +8,13 @@ import (
 	"github.com/costaluu/flag/constants"
 	"github.com/urfave/cli/v2"
 )
+
+var VERSION = "dev"
   
 func main() {
 	app := &cli.App{
 		Name: constants.APP_NAME,
-		Version: constants.VERSION,
+		Version: VERSION,
 		Authors: []*cli.Author{
 			&cli.Author{
 				Name: "costaluu",

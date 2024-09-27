@@ -208,7 +208,7 @@ func VersionUpdateBase(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("%s version base updated", path))
+		logger.Success[string](fmt.Sprintf("%s version base updated", utils.AccentTextUnderLine(path)))
 	}
 }
 
@@ -245,7 +245,7 @@ func VersionBase(path string, skipForm bool) {
 
 	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, "base"))
 
-	logger.Success[string](fmt.Sprintf("%s is now a version base", path))
+	logger.Success[string](fmt.Sprintf("%s is now a version base", utils.AccentTextUnderLine(path)))
 }
 
 func VersionNewFeature(path string, name string, skipForm bool, finalMessage bool) {
@@ -322,7 +322,7 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("saved record for %s with feature %s", path, newFeature.Name))
+		logger.Success[string](fmt.Sprintf("saved record for %s with feature %s", utils.AccentTextUnderLine(path), utils.AccentTextUnderLine(newFeature.Name)))
 	}
 }
 
@@ -451,7 +451,7 @@ func VersionSave(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("Saved to %s", selected.ItemTitle))
+		logger.Success[string](fmt.Sprintf("Saved to %s", utils.AccentTextUnderLine(selected.ItemTitle)))
 	}
 }
 
@@ -553,7 +553,7 @@ func VersionDelete(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("deleted feature %s on %s", selectedStringName, path))
+		logger.Success[string](fmt.Sprintf("deleted feature %s on %s", utils.AccentTextUnderLine(selectedStringName), utils.AccentTextUnderLine(path)))
 	}
 }
 
@@ -800,7 +800,7 @@ func RebaseFile(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("%s rebased", path))
+		logger.Success[string](fmt.Sprintf("%s rebased", utils.AccentTextUnderLine(path)))
 	}
 }
 
@@ -830,11 +830,10 @@ func AllVersionFeatureDetails() {
 		lipgloss.
 		NewStyle().
 		Padding(0, 1).
-		SetString("VersionsFeature report").
+		SetString("Versions report").
 		Background(lipgloss.Color(constants.AccentColor)).
 		Foreground(lipgloss.Color("255")).
 		Bold(true)
-		
 
 	fmt.Printf("\n\n%s\n\n", titleStyle.Render())
 
@@ -930,16 +929,7 @@ func VersionFeatureDetailsFromPath(path string) {
 		return len(data[i][0]) > len(data[j][0])
 	})
 
-	var style = 
-		lipgloss.
-		NewStyle().
-		SetString(path).
-		Foreground(lipgloss.Color(constants.AccentColor)).
-		Underline(true).
-		Bold(true)
-		
-
-	fmt.Printf("%s\n", style.Render())
+	fmt.Printf("%s\n", utils.AccentTextUnderLine(path))
 
 	table.RenderTable(headers, data)
 }

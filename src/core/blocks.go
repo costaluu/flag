@@ -262,16 +262,7 @@ func ListBlocksFromPath(path string) []types.BlockFeature {
 }
 
 func BlockDetails(path string) {
-	var style = 
-		lipgloss.
-		NewStyle().
-		SetString(path).
-		Foreground(lipgloss.Color(constants.AccentColor)).
-		Underline(true).
-		Bold(true)
-		
-
-	fmt.Printf("%s\n", style.Render())
+	fmt.Printf("%s\n", utils.AccentTextUnderLine(path))
 
 	blocks := ListBlocksFromPath(path)
 
@@ -578,7 +569,7 @@ func ToggleBlockFeature(featureName string, state string) {
 		}
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s toggled %s", featureName, state))
+	logger.Success[string](fmt.Sprintf("feature %s toggled %s", utils.AccentTextUnderLine(featureName), state))
 }
 
 func PromoteBlockFeature(featureName string) {
@@ -657,8 +648,7 @@ func PromoteBlockFeature(featureName string) {
 			filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 		}
 	}
-
-	logger.Success[string](fmt.Sprintf("feature %s promoted", featureName))
+	logger.Success[string](fmt.Sprintf("feature %s promoted", utils.AccentTextUnderLine(featureName)))
 }
 
 func DemoteBlockFeature(featureName string) {
@@ -738,5 +728,5 @@ func DemoteBlockFeature(featureName string) {
 		}
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s demoted", featureName))
+	logger.Success[string](fmt.Sprintf("feature %s demoted", utils.AccentTextUnderLine(featureName)))
 }
