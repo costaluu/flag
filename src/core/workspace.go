@@ -10,10 +10,45 @@ import (
 	"github.com/costaluu/flag/types"
 )
 
-func CheckWorkspaceFolder() bool {
-	repoRoot := git.GetRepositoryRoot()
+var delimeters types.Delimeters = map[string]types.Delimeter{
+		".xqy": {
+			Start: "(:~ ",
+			End: " ~:)",
+		},
+		".xml": {
+			Start: "<!-- ",
+			End: " -->",
+		},
+		".html": {
+			Start: "<!-- ",
+			End: " -->",
+		},
+		".cc": {
+			Start: "// ",
+			End: " //",
+		},
+		".cpp": {
+			Start: "// ",
+			End: " //",
+		},
+		".go": {
+			Start: "// ",
+			End: " //",
+		},
+		".py": {
+			Start: "# ",
+			End: " #",
+		},
+		"default": {
+			Start: "// ",
+			End: " //",
+		},
+}
 
-	featuresPath := filepath.Join(repoRoot, ".features")
+func CheckWorkspaceFolder() bool {
+	rootDir := git.GetRepositoryRoot()
+
+	featuresPath := filepath.Join(rootDir, ".features")
 
 	// Check if the .features directory exists
 	if _, err := os.Stat(featuresPath); os.IsNotExist(err) {
@@ -22,11 +57,27 @@ func CheckWorkspaceFolder() bool {
 		logger.Fatal[error](err)
 	}
 
-	versionsExists := filesystem.FileFolderExists(filepath.Join(repoRoot, ".features", "versions"))
-	blocksExists := filesystem.FileFolderExists(filepath.Join(repoRoot, ".features", "blocks"))
-	delimetersExists := filesystem.FileExists(filepath.Join(repoRoot, ".features", "delimeters"))
+	versionsExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions"))
+	blocksExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "blocks"))
+	delimetersExists := filesystem.FileExists(filepath.Join(rootDir, ".features", "delimeters"))
 
-	return versionsExists && blocksExists && delimetersExists
+	if !versionsExists && !blocksExists && !delimetersExists {
+		return false
+	}
+
+	if !versionsExists {
+		filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions"))
+	}
+
+	if !blocksExists {
+		filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks"))
+	}
+
+	if !delimetersExists {
+		filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
+	}
+
+	return true
 }
 
 func CreateNewWorkspace() {
@@ -37,42 +88,6 @@ func CreateNewWorkspace() {
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features"))
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks"))
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions"))
-
-	var delimeters types.Delimeters = map[string]types.Delimeter{
-			".xqy": {
-				Start: "(:~ ",
-				End: " ~:)",
-			},
-			".xml": {
-				Start: "<!-- ",
-				End: " -->",
-			},
-			".html": {
-				Start: "<!-- ",
-				End: " -->",
-			},
-			".cc": {
-				Start: "// ",
-				End: " //",
-			},
-			".cpp": {
-				Start: "// ",
-				End: " //",
-			},
-			".go": {
-				Start: "// ",
-				End: " //",
-			},
-			".py": {
-				Start: "# ",
-				End: " #",
-			},
-			"default": {
-				Start: "// ",
-				End: " //",
-			},
-		}
-
 	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 
 	logger.Success[string]("folder .features created")
