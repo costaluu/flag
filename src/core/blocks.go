@@ -648,6 +648,7 @@ func PromoteBlockFeature(featureName string) {
 			filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 		}
 	}
+	
 	logger.Success[string](fmt.Sprintf("feature %s promoted", utils.AccentTextUnderLine(featureName)))
 }
 
