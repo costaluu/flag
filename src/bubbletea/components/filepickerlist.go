@@ -10,15 +10,6 @@ import (
 	"github.com/costaluu/flag/constants"
 )
 
-// var items []components.FileListItem = []components.FileListItem{
-// 		{ItemTitle: "Folder 1", Desc: "Description 1"},
-// 		{ItemTitle: "Folder 2", Desc: "Description 2"},
-// 		{ItemTitle: "Folder 3", Desc: "Description 3"},
-// 		{ItemTitle: "Folder 4", Desc: "Description 4"},
-// 		{ItemTitle: "Folder 5", Desc: "Description 5"},
-// 		{ItemTitle: "Folder 6", Desc: "Description 6"},
-// 	}
-
 var FilePickerListResult FileListItem
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
