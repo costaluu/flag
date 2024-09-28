@@ -20,7 +20,7 @@ func main() {
 				Name: "costaluu",
 			},
 		},
-		Usage: "flag is a branch-level feature flag manager",
+		Usage: "flag is a configuration-based feature flag manager",
         Commands: []*cli.Command{
 			commands.InitCommand,
 			commands.SyncCommand,
