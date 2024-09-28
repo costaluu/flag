@@ -119,7 +119,7 @@ jobs:
             - name: Update Version Variable
               run: |
                   curl -X PATCH \
-                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                  -H "Accept: application/vnd.github.v3+json" \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                   https://api.github.com/repos/${{ github.repository }}/actions/variables/CURRENT_VERSION \
                   -d '{"name":"CURRENT_VERSION","value":"v$MAJOR.$MINOR.$NEW_PATCH"}'
