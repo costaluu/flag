@@ -116,9 +116,9 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Update Version Variable
+             name: Update Version Variable
               run: |
-                  VERSION="v$MAJOR.$MINOR.$NEW_PATCH"
+                  VERSION="${{ env.NEW_VERSION }}"
                   curl -X PATCH \
                   -H "Accept: application/vnd.github+json" \
                   -H "Authorization: Bearer ${{ secrets.ACTIONS_TOKEN }}" \
