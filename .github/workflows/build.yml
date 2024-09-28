@@ -26,7 +26,7 @@ jobs:
             - name: Retrieve current version
               id: get_version
               run: |
-                  VERSION=$(echo "${{ secrets.CURRENT_VERSION }}" | cut -d 'v' -f 2)
+                  VERSION=$(echo "${{ vars.CURRENT_VERSION }}" | cut -d 'v' -f 2)
                   MAJOR=$(echo $VERSION | cut -d '.' -f 1)
                   MINOR=$(echo $VERSION | cut -d '.' -f 2)
                   PATCH=$(echo $VERSION | cut -d '.' -f 3)
@@ -37,10 +37,10 @@ jobs:
             - name: Build for Linux, macOS, and Windows
               run: |
                   GIT_WORKSPACE="${{ github.workspace }}"
-                  OUTPUT_DIR="${{ github.workspace }}/bin" # Save the binaries outside of src
+                  OUTPUT_DIR="${{ github.workspace }}/bin"
                   BINARY_NAME="flag"
                   mkdir -p $OUTPUT_DIR/linux $OUTPUT_DIR/macos $OUTPUT_DIR/windows
-                  cd $GIT_WORKSPACE/src # Change to the src directory
+                  cd $GIT_WORKSPACE/src
 
                   # Build for Linux
                   GOOS=linux GOARCH=amd64 go build -ldflags="-X main.VERSION=${{ env.NEW_VERSION }}" -trimpath -o $OUTPUT_DIR/linux/$BINARY_NAME
@@ -114,10 +114,10 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Update Version Secret
+            - name: Update Version Variable
               run: |
                   curl -X PATCH \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/actions/secrets/CURRENT_VERSION \
-                  -d '{"encrypted_value":"v$MAJOR.$MINOR.$NEW_PATCH"}'
+                  https://api.github.com/repos/${{ github.repository }}/actions/variables/CURRENT_VERSION \
+                  -d '{"name":"CURRENT_VERSION","value":"v$MAJOR.$MINOR.$NEW_PATCH"}'
