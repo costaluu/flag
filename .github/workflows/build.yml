@@ -8,9 +8,7 @@ on:
         branches:
             - main
 
-permissions:
-    actions: write # Allows updating GitHub Actions variables
-    contents: write # Allows writing to repository contents
+permissions: write-all
 
 jobs:
     build:
@@ -116,7 +114,7 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-             name: Update Version Variable
+            - name: Update Version Variable
               run: |
                   VERSION="${{ env.NEW_VERSION }}"
                   curl -X PATCH \
