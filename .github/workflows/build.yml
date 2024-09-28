@@ -8,7 +8,9 @@ on:
         branches:
             - main
 
-permissions: write-all
+permissions:
+    actions: write # Allows updating GitHub Actions variables
+    contents: write # Allows writing to repository contents
 
 jobs:
     build:
