@@ -13,6 +13,7 @@ import (
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
+	"github.com/costaluu/flag/styles"
 	"github.com/costaluu/flag/table"
 	"github.com/costaluu/flag/types"
 	"github.com/costaluu/flag/utils"
@@ -262,7 +263,7 @@ func ListBlocksFromPath(path string) []types.BlockFeature {
 }
 
 func BlockDetails(path string) {
-	fmt.Printf("%s\n", utils.AccentTextUnderLine(path))
+	fmt.Printf("%s\n", styles.AccentTextStyle(path))
 
 	blocks := ListBlocksFromPath(path)
 
@@ -569,7 +570,17 @@ func ToggleBlockFeature(featureName string, state string) {
 		}
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s toggled %s", utils.AccentTextUnderLine(featureName), state))
+	var stateStyle string
+
+	if state == constants.STATE_DEV {
+		stateStyle = styles.BlueTextStyle(state)
+	} else if state == constants.STATE_ON {
+		stateStyle = styles.GreenTextStyle(state)
+	} else {
+		stateStyle = styles.RedTextStyle(state)
+	}
+
+	logger.Success[string](fmt.Sprintf("feature %s toggled %s", styles.AccentTextStyle(featureName), stateStyle))
 }
 
 func PromoteBlockFeature(featureName string) {
@@ -649,7 +660,7 @@ func PromoteBlockFeature(featureName string) {
 		}
 	}
 	
-	logger.Success[string](fmt.Sprintf("feature %s promoted", utils.AccentTextUnderLine(featureName)))
+	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.SuccessTextStyle("promoted")))
 }
 
 func DemoteBlockFeature(featureName string) {
@@ -729,5 +740,5 @@ func DemoteBlockFeature(featureName string) {
 		}
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s demoted", utils.AccentTextUnderLine(featureName)))
+	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.ErrorTextStyle("demoted")))
 }

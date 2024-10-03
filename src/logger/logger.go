@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/styles"
 )
 
 var infoStyle = 
@@ -40,43 +41,33 @@ var sucessStyle =
 		Underline(true).
 		Bold(true)
 	
-var chevronRight = renderDefault[string]("›")
-
-func renderDefault[T any](msg T) string {
-	var defaultStyle = 
-		lipgloss.
-			NewStyle().
-			SetString(fmt.Sprintf("%s", msg)).
-			Foreground(lipgloss.Color("242"))
-	
-	return defaultStyle.Render()
-}
+var chevronRight = styles.SecondaryTextStyle[string]("›")
 
 func Info[T any](msg T) {
-	fmt.Printf("%s  🔎  %s  %v\n", chevronRight, infoStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  🔎  %s  %v\n", chevronRight, styles.InfoTextStyle("info"), styles.SecondaryTextStyle(msg))
 }
 
 func Result[T any](msg T) {
-	fmt.Printf("%s  🔎  %s  %v\n", chevronRight, infoStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  🔎  %s  %v\n", chevronRight, styles.InfoTextStyle("info"), styles.SecondaryTextStyle(msg))
 	os.Exit(0)
 }
 
 func Error[T any](msg T) {
-	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, errorStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.ErrorTextStyle("error"), styles.SecondaryTextStyle(msg))
 }
 
 func Fatal[T any](msg T) {
-	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, errorStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.ErrorTextStyle("fatal"), styles.SecondaryTextStyle(msg))
 	debug.PrintStack()
 	os.Exit(0)
 }
 
 func Warning[T any](msg T) {
-	fmt.Printf("%s  🚧  %s  %v\n", chevronRight, warningStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  🚧  %s  %v\n", chevronRight, styles.WarningTextStyle("warning"), styles.SecondaryTextStyle(msg))
 }
 
 func Success[T any](msg T) {
-	fmt.Printf("%s  ✅  %s  %v\n", chevronRight, sucessStyle.Render(), renderDefault(msg))
+	fmt.Printf("%s  ✅  %s  %v\n", chevronRight, styles.SuccessTextStyle("success"), styles.SecondaryTextStyle(msg))
 }
 
 func Debug() {

@@ -7,7 +7,7 @@ import (
 	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/core"
 	"github.com/costaluu/flag/logger"
-	"github.com/costaluu/flag/utils"
+	"github.com/costaluu/flag/styles"
 	"github.com/urfave/cli/v2"
 )
 
@@ -39,7 +39,7 @@ var DelimeterSetCommand *cli.Command = &cli.Command{
 
 		core.SetDelimeter(extension, args[1], args[2])
 
-		logger.Success[string](fmt.Sprintf("delimeter for file extension %s seted", utils.AccentTextUnderLine(extension)))
+		logger.Success[string](fmt.Sprintf("delimeter for file extension %s seted", styles.AccentTextStyle(extension)))
 
 		return nil
 	},
@@ -68,7 +68,7 @@ var DelimeterDeleteCommand *cli.Command = &cli.Command{
 
 		core.DeleteDelimeter(extension)
 
-		logger.Success[string](fmt.Sprintf("delimeter for file extension %s deleted", utils.AccentTextUnderLine(extension)))
+		logger.Success[string](fmt.Sprintf("delimeter for file extension %s deleted", styles.AccentTextStyle(extension)))
 
 		return nil
 	},

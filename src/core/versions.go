@@ -16,6 +16,7 @@ import (
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
+	"github.com/costaluu/flag/styles"
 	"github.com/costaluu/flag/table"
 	"github.com/costaluu/flag/types"
 	"github.com/costaluu/flag/utils"
@@ -86,7 +87,15 @@ func ToggleVersionFeature(featureName string, state string) {
 		BuildBaseForFile(path)
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s toggled %s", featureName, state))
+	var stateStyle string
+
+	if state == constants.STATE_ON {
+		stateStyle = styles.GreenTextStyle(state)
+	} else {
+		stateStyle = styles.RedTextStyle(state)
+	}
+
+	logger.Success[string](fmt.Sprintf("feature %s toggled %s", styles.AccentTextStyle(featureName), stateStyle))
 }
 
 type FeatureStateOption struct {
@@ -208,7 +217,7 @@ func VersionUpdateBase(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("%s version base updated", utils.AccentTextUnderLine(path)))
+		logger.Success[string](fmt.Sprintf("%s version base updated", styles.AccentTextStyle(path)))
 	}
 }
 
@@ -230,8 +239,8 @@ func VersionBase(path string, skipForm bool) {
 	}
 
 	if !skipForm {
-		logger.Warning("Warning\n\nOnce you execute the base command and create the base, it becomes your responsibility to keep the features updated. To ensure all features are synchronized, please use the save command regularly. Failure to do so may lead to inconsistencies or outdated features.\n\n")
-		proceed := components.FormConfirm("You want to continue?", "Yes", "Cancel")
+		logger.Warning("\nOnce you execute the base command and create the base, it becomes your responsibility to keep the features updated. To ensure all features are synchronized, please use the save command regularly. Failure to do so may lead to inconsistencies or outdated features.\n")
+		proceed := components.FormConfirm("Do you want to continue?", "Yes", "Cancel")
 
 		if !proceed {
 			os.Exit(0)
@@ -245,7 +254,7 @@ func VersionBase(path string, skipForm bool) {
 
 	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, "base"))
 
-	logger.Success[string](fmt.Sprintf("%s is now a version base", utils.AccentTextUnderLine(path)))
+	logger.Success[string](fmt.Sprintf("%s is now a version base", styles.AccentTextStyle(path)))
 }
 
 func VersionNewFeature(path string, name string, skipForm bool, finalMessage bool) {
@@ -276,7 +285,7 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	}
 		
 	if !skipForm && hasOtherFeaturesTurnedOn {
-		var warningMessage string = fmt.Sprintf("Warning\n\nA total of %d feature(s) are currently turned on and they also change %s\n\n", len(features), path)
+		var warningMessage string = fmt.Sprintf("A total of %d feature(s) are currently turned on and they also change %s\n\n", len(features), path)
 
 		for _, featureName := range featureNamesTurnedOn {
 			warningMessage += fmt.Sprintf("• %s\n", featureName)
@@ -322,7 +331,7 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("saved record for %s with feature %s", utils.AccentTextUnderLine(path), utils.AccentTextUnderLine(newFeature.Name)))
+		logger.Success[string](fmt.Sprintf("saved record for %s with feature %s", styles.AccentTextStyle(path), styles.AccentTextStyle(newFeature.Name)))
 	}
 }
 
@@ -451,7 +460,7 @@ func VersionSave(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("Saved to %s", utils.AccentTextUnderLine(selected.ItemTitle)))
+		logger.Success[string](fmt.Sprintf("Saved to %s", styles.AccentTextStyle(selected.ItemTitle)))
 	}
 }
 
@@ -553,7 +562,7 @@ func VersionDelete(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("deleted feature %s on %s", utils.AccentTextUnderLine(selectedStringName), utils.AccentTextUnderLine(path)))
+		logger.Success[string](fmt.Sprintf("deleted feature %s on %s", styles.AccentTextStyle(selectedStringName), styles.AccentTextStyle(path)))
 	}
 }
 
@@ -745,7 +754,7 @@ func RebaseFile(path string, finalMessage bool) {
 
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
-	var warningMessage string = fmt.Sprintf("Warning\n\nThe rebase process will merge the current state of the file '%s' to all %d states currently saved. The merge process may result in conflicts that will need to be resolved manually.\n\n", path, len(tree))
+	var warningMessage string = fmt.Sprintf("The rebase process will merge the current state of the file '%s' to all %d states currently saved. The merge process may result in conflicts that will need to be resolved manually.\n\n", path, len(tree))
 
 	logger.Warning[string](warningMessage)
 
@@ -800,7 +809,7 @@ func RebaseFile(path string, finalMessage bool) {
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("%s rebased", utils.AccentTextUnderLine(path)))
+		logger.Success[string](fmt.Sprintf("%s rebased", styles.AccentTextStyle(path)))
 	}
 }
 
@@ -929,7 +938,7 @@ func VersionFeatureDetailsFromPath(path string) {
 		return len(data[i][0]) > len(data[j][0])
 	})
 
-	fmt.Printf("%s\n", utils.AccentTextUnderLine(path))
+	fmt.Printf("%s\n", styles.AccentTextStyle(path))
 
 	table.RenderTable(headers, data)
 }
@@ -1231,7 +1240,7 @@ func VersionPromote(finalMessage bool) {
 			plural = "s"
 		}
 
-		logger.Success[string](fmt.Sprintf("feature%s %s promoted", plural, strings.Join(parsedSelectsNames, "+")))
+		logger.Success[string](fmt.Sprintf("feature%s %s promoted", plural, styles.SuccessTextStyle(strings.Join(parsedSelectsNames, "+"))))
 	}
 }
 
@@ -1286,7 +1295,7 @@ func VersionDemote(finalMessage bool) {
 			plural = "s"
 		}
 
-		logger.Success[string](fmt.Sprintf("feature%s %s demoted", plural, strings.Join(parsedSelectsNames, "+")))
+		logger.Success[string](fmt.Sprintf("feature%s %s demoted", plural, styles.ErrorTextStyle(strings.Join(parsedSelectsNames, "+"))))
 	}
 }
 
