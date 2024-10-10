@@ -41,10 +41,10 @@ func ConvertJsonToString(data interface{}) string {
 	return string(bytes)
 }
 
-func GenerateCheckSumFromString(str string) string {
+func GenerateCheckSumFromString(seeds ...string) string {
 	hash := sha256.New()
 
-	hash.Write([]byte(str))
+	hash.Write([]byte(strings.Join(seeds, "")))
 
 	return hex.EncodeToString(hash.Sum(nil))
 }
@@ -59,6 +59,13 @@ func GetCurrentUnixTimestampInMs() string {
 
 func GenerateId(seeds ...string) string {
 	hash := sha256.Sum256([]byte(strings.Join(seeds, "")))
+    hexHash := hex.EncodeToString(hash[:])
+    
+	return hexHash[:constants.ID_LENGTH]
+}
+
+func HashPath(filepath string) string {
+	hash := sha256.Sum256([]byte(filepath))
     hexHash := hex.EncodeToString(hash[:])
     
 	return hexHash[:constants.ID_LENGTH]

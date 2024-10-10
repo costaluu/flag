@@ -34,7 +34,8 @@ func ListAllVersionsFeature() map[string][]types.VersionFeature {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
-			versionsSet[utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))] = GetVersionFeaturesFromPath(utils.HashFilePath(utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+			versionsSet[recoveredPath] = GetVersionFeaturesFromPath(utils.HashPath(recoveredPath))
 			
 			return fs.SkipDir
 		}
@@ -79,7 +80,7 @@ func ToggleVersionFeature(featureName string, state string) {
 			if feature.Name == featureName {
 				feature.State = state
 
-				hashedPath := utils.HashFilePath(path)
+				hashedPath := utils.HashPath(path)
 				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "versions", hashedPath, fmt.Sprintf("%s.feature", feature.Id)), feature)
 			}
 		}
@@ -114,10 +115,9 @@ func ListAllFeatureStateOptions() map[string]map[string]FeatureStateOption {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
-			parsedPath := utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))
-			hashedPath := utils.HashFilePath(parsedPath)
+			parsedPath := filesystem.FileRead(filepath.Join(path, "_path"))
 
-			featureStateList := GetVersionFeaturesStatesFromPath(hashedPath)
+			featureStateList := GetVersionFeaturesStatesFromPath(parsedPath)
 			var featureStateSet map[string]FeatureStateOption = make(map[string]FeatureStateOption)
 
 			for _, featureStateItem := range featureStateList {
@@ -145,7 +145,9 @@ func ListAllFeatureStateOptions() map[string]map[string]FeatureStateOption {
 func GetVersionFeaturesStatesFromPath(filePath string) []FeatureStateOption {
 	var rootDir string = git.GetRepositoryRoot()
 
-	hashedPath := utils.HashFilePath(filePath)
+	fmt.Println(filePath)
+
+	hashedPath := utils.HashPath(filePath)
 	features := GetVersionFeaturesFromPath(hashedPath)
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -189,7 +191,7 @@ func GetVersionFeaturesFromPath(filePath string) []types.VersionFeature {
 
 		_, fileName := filepath.Split(path)
 		
-		if fileName == "base" || fileName == workingtree.WorkingTreeFile {
+		if fileName == "base" || fileName == constants.WorkingTreeFile || fileName == "_path" {
 			continue
 		}
 
@@ -204,7 +206,7 @@ func GetVersionFeaturesFromPath(filePath string) []types.VersionFeature {
 func VersionUpdateBase(path string, finalMessage bool) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -230,7 +232,7 @@ func VersionBase(path string, skipForm bool) {
 		logger.Result[string]("workspace not found, use flag init")
 	}
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -248,18 +250,19 @@ func VersionBase(path string, skipForm bool) {
 	}
 
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions", hashedPath))
-	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory))
+	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory))
 
 	workingtree.CreateWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
 	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, "base"))
+	filesystem.FileWriteContentToFile(filepath.Join(rootDir, ".features", "versions", hashedPath, "_path"), path)
 
 	logger.Success[string](fmt.Sprintf("%s is now a version base", styles.AccentTextStyle(path)))
 }
 
 func VersionNewFeature(path string, name string, skipForm bool, finalMessage bool) {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 	features := GetVersionFeaturesFromPath(hashedPath)
 
 	var featureExists bool = false
@@ -285,13 +288,13 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	}
 		
 	if !skipForm && hasOtherFeaturesTurnedOn {
-		var warningMessage string = fmt.Sprintf("A total of %d feature(s) are currently turned on and they also change %s\n\n", len(features), path)
+		var warningMessage string = fmt.Sprintf("A total of %d feature(s) are currently turned on and they also change %s\n", len(features), path)
 
 		for _, featureName := range featureNamesTurnedOn {
 			warningMessage += fmt.Sprintf("• %s\n", featureName)
 		}
 
-		warningMessage += "\nThe new feature that you're about to save may also include modifications from the features mentioned above. If you want this to be a focused version, consider disabling the other features. By proceding, you will create a state that is the merged of all features turned on.\n"
+		warningMessage += "The new feature that you're about to save may also include modifications from the features mentioned above. If you want this to be a focused version, consider disabling the other features. By proceding, you will create a state that is the merged of all features turned on.\n"
 
 		logger.Warning[string](warningMessage)
 
@@ -314,16 +317,27 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	}
 
 	featureNamesTurnedOn = append(featureNamesTurnedOn, name)
-	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), []string{newFeature.Id}, strings.Join([]string{newFeature.Id, newRecordCheckSum}, "+"))
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, strings.Join([]string{newFeature.Id, newRecordCheckSum}, "+")))
+	fileChecksum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
+	savedChecksum := utils.GenerateCheckSumFromString(newFeature.Id, fileChecksum)
+
+	workingtree.Add(
+		filepath.Join(rootDir, ".features", "versions", hashedPath), []string{newFeature.Id},
+		workingtree.WorkingTreeValue{ FileCheckSum: fileChecksum, SavedCheckSum: savedChecksum },
+	)
+
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedChecksum))
 	
 	if hasOtherFeaturesTurnedOn {
-		newVersionChecksum := strings.Join(append(featureIdsTurnedOn, newRecordCheckSum), "+")
+		savedChecksum := utils.GenerateCheckSumFromString(append(featureIdsTurnedOn, fileChecksum)...)
 
-		workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), featureIdsTurnedOn, newVersionChecksum)
-		filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
+		workingtree.Add(
+			filepath.Join(rootDir, ".features", "versions", hashedPath),
+			featureIdsTurnedOn,
+			workingtree.WorkingTreeValue{ FileCheckSum: fileChecksum, SavedCheckSum: savedChecksum },
+		)
+
+		filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedChecksum))
 	}
 
 	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "versions", hashedPath, fmt.Sprintf("%s.feature", newFeature.Id)), newFeature)
@@ -331,14 +345,14 @@ func VersionNewFeature(path string, name string, skipForm bool, finalMessage boo
 	BuildBaseForFile(path)
 
 	if finalMessage {
-		logger.Success[string](fmt.Sprintf("saved record for %s with feature %s", styles.AccentTextStyle(path), styles.AccentTextStyle(newFeature.Name)))
+		logger.Success[string](fmt.Sprintf("saved version for %s with feature %s", styles.AccentTextStyle(path), styles.AccentTextStyle(newFeature.Name)))
 	}
 }
 
 func VersionSaveToCurrentState(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 	
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	var currentFeaturesIdsTurnedOn []string = []string{}
@@ -351,27 +365,31 @@ func VersionSaveToCurrentState(path string) {
 
 	key := workingtree.NormalizeFeatures(currentFeaturesIdsTurnedOn)
 
-	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(key))
+	_, workingTreeValue, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(key))
 
 	if !exists {
 		logger.Result[string]("could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), key)
-	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 
-	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
-	newVersionChecksum := strings.Join(append(currentFeaturesIdsTurnedOn, newRecordCheckSum), "+")
+	fileCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
+	savedCheckSum := utils.GenerateCheckSumFromString(append(currentFeaturesIdsTurnedOn, fileCheckSum)...)
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), currentFeaturesIdsTurnedOn, newVersionChecksum)
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
+	workingtree.Add(
+		filepath.Join(rootDir, ".features", "versions", hashedPath),
+		currentFeaturesIdsTurnedOn,
+		workingtree.WorkingTreeValue{ FileCheckSum: fileCheckSum, SavedCheckSum: savedCheckSum },
+	)
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedCheckSum))
 
 	BuildBaseForFile(path)
 }
 
 func VersionSave(path string, finalMessage bool) {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	var currentFeaturesTurnedOn []string = []string{}
@@ -442,20 +460,25 @@ func VersionSave(path string, finalMessage bool) {
 		os.Exit(0)
 	}
 		
-	_, checksum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(selected.ItemValue))
+	_, workingTreeValue, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(selected.ItemValue))
 
 	if !exists {
 		logger.Result[string]("could not found state")
 	}
 
 	workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), selected.ItemValue)
-	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 
-	newRecordCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
-	newVersionChecksum := strings.Join(append(workingtree.StringToStringSlice(selected.ItemValue), newRecordCheckSum), "+")
+	fileCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
+	savedCheckSum := utils.GenerateCheckSumFromString(append(workingtree.StringToStringSlice(selected.ItemValue), fileCheckSum)...)
 
-	workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), workingtree.StringToStringSlice(selected.ItemValue), newVersionChecksum)
-	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
+	workingtree.Add(
+		filepath.Join(rootDir, ".features", "versions", hashedPath),
+		workingtree.StringToStringSlice(selected.ItemValue),
+		workingtree.WorkingTreeValue{ FileCheckSum: fileCheckSum, SavedCheckSum: savedCheckSum },
+	)
+
+	filesystem.FileCopy(filepath.Join(rootDir, path), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedCheckSum))
 
 	BuildBaseForFile(path)
 
@@ -466,7 +489,13 @@ func VersionSave(path string, finalMessage bool) {
 
 func VersionDelete(path string, finalMessage bool) {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
+
+	versionExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
+
+	if !versionExists {
+		logger.Result[string](fmt.Sprintf("%s is not a base file", styles.AccentTextStyle(path)))
+	}
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	var currentFeaturesTurnedOn []string = []string{}
@@ -539,17 +568,17 @@ func VersionDelete(path string, finalMessage bool) {
 		}
 	}
 	
-	for key, checksum := range tree {
+	for key, workingTreeValue := range tree {
 		if len(selectedIdsSlice) == 1 {
 			if(strings.Contains(key, selectedIdsSlice[0])) {
-				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 				workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), key)
 			}
 		} else {
 			parsedKey := workingtree.StringToStringSlice(key)
 
 			if reflect.DeepEqual(parsedKey, selectedIdsSlice) {
-				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 				workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), key)
 			}
 		}
@@ -575,7 +604,7 @@ func BuildBaseForFile(path string) {
 		logger.Result[string]("workspace not found, use flag init")
 	}
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -598,7 +627,7 @@ func BuildBaseForFile(path string) {
 			featureIdsTurnedOn = append(featureIdsTurnedOn, feature.Id)
 		}
 
-		_, checksumCurrentState, existsCurrentState := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), featureIdsTurnedOn)
+		_, workingTreeValueCurrentState, existsCurrentState := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), featureIdsTurnedOn)
 	
 		if !existsCurrentState {
 			nearPrefix, remaining := workingtree.FindNearestPrefix(filepath.Join(rootDir, ".features", "versions", hashedPath), featureIdsTurnedOn)
@@ -606,7 +635,7 @@ func BuildBaseForFile(path string) {
 			tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 			
 			nearPrefixKey := workingtree.NormalizeFeatures(nearPrefix)
-			tempStateCheckSum, exists := tree[nearPrefixKey]
+			tempStateWorkingTreeValue, exists := tree[nearPrefixKey]
 			
 			if !exists {
 				logger.Result[string]("build base: couldn't find temp state")
@@ -627,12 +656,12 @@ func BuildBaseForFile(path string) {
 			}
 			
 			filesystem.FileCopy(
-				filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, tempStateCheckSum),
+				filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, tempStateWorkingTreeValue.SavedCheckSum),
 				filepath.Join(rootDir, ".features", "merge-tmp"),
 			)
 
 			for _, featureRemainingId := range remaining {
-				soloFeatureCheckSum, exists := tree[fmt.Sprintf("[%s]", featureRemainingId)]
+				soloFeatureWorkingTreeValue, exists := tree[fmt.Sprintf("[%s]", featureRemainingId)]
 
 				if !exists {
 					logger.Result[string]("build base: couldn't find feature for building temp state")
@@ -656,7 +685,7 @@ func BuildBaseForFile(path string) {
 
 				Merge(
 					filepath.Join(rootDir, ".features", "merge-tmp"),
-					filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, soloFeatureCheckSum),
+					filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, soloFeatureWorkingTreeValue.SavedCheckSum),
 					filepath.Join(rootDir, ".features", "versions", hashedPath, "base"),
 					tempStateName,
 					featureName,
@@ -666,13 +695,16 @@ func BuildBaseForFile(path string) {
 				tempStateName += fmt.Sprintf("+%s", featureName)
 				nearPrefix = append(nearPrefix, featureRemainingId)
 				
-				newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
+				fileCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
+				savedCheckSum := utils.GenerateCheckSumFromString(append(nearPrefix, fileCheckSum)...)
 
-				newVersionChecksum := strings.Join(append(nearPrefix, newCheckSum), "+")
+				workingtree.Add(
+					filepath.Join(rootDir, ".features", "versions", hashedPath),
+					nearPrefix,
+					workingtree.WorkingTreeValue{ FileCheckSum: fileCheckSum, SavedCheckSum: savedCheckSum },
+				)
 
-				workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), nearPrefix, newVersionChecksum)
-
-				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
+				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedCheckSum))
 			}
 		
 			filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, path))
@@ -681,11 +713,11 @@ func BuildBaseForFile(path string) {
 			return
 		}
 		
-		filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, checksumCurrentState), filepath.Join(rootDir, path))		
+		filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValueCurrentState.SavedCheckSum), filepath.Join(rootDir, path))		
 	}
 }
 
-func LookForChangesInBase(path string) bool {
+func VersionLookForUntrackedChanges(path string) bool {
 	workspaceExists := CheckWorkspaceFolder()
 
 	var rootDir string = git.GetRepositoryRoot()
@@ -694,7 +726,7 @@ func LookForChangesInBase(path string) bool {
 		logger.Result[string]("workspace not found, use flag init")
 	}
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -723,15 +755,15 @@ func LookForChangesInBase(path string) bool {
 			currentStateFeatures = append(currentStateFeatures, feature.Id)
 		}
 
-		_, currentStateCheckSum, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), currentStateFeatures)
+		_, workingTreeValueCurrentState, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), currentStateFeatures)
 
 		if !exists {
 			logger.Result[string]("can not find current state")
 		}
 
 		currentCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, path))
-		
-		return !strings.Contains(currentStateCheckSum, currentCheckSum)
+
+		return workingTreeValueCurrentState.FileCheckSum != currentCheckSum
 	}
 }
 
@@ -744,7 +776,7 @@ func RebaseFile(path string, finalMessage bool) {
 		logger.Result[string]("workspace not found, use flag init")
 	}
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -766,7 +798,7 @@ func RebaseFile(path string, finalMessage bool) {
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 
-	for stringFeatureIds, checksum := range tree {
+	for stringFeatureIds, workingTreeValue := range tree {
 		featureIds := workingtree.StringToStringSlice(stringFeatureIds)
 		
 		var featureName string
@@ -787,7 +819,7 @@ func RebaseFile(path string, finalMessage bool) {
 		styledFeatureName := lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor)).SetString(featureName).Bold(true)
 		
 		Merge(
-			filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, checksum),
+			filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum),
 			filepath.Join(rootDir, path),
 			filepath.Join(rootDir, ".features", "versions", hashedPath, "base"),
 			featureName,
@@ -795,13 +827,18 @@ func RebaseFile(path string, finalMessage bool) {
 			fmt.Sprintf("Merging %s with the new %s", styledFeatureName.Render(), styledNewbase.Render()),
 		)
 
-		newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
-		newVersionChecksum := strings.Join(append(featureIds, newCheckSum), "+")
+		fileCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
+		savedCheckSum := utils.GenerateCheckSumFromString(append(featureIds, fileCheckSum)...)
 
-		filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, checksum))
+		filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 
-		workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), featureIds, newVersionChecksum)
-		filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, workingtree.WorkingTreeDirectory, newVersionChecksum))
+		workingtree.Add(
+			filepath.Join(rootDir, ".features", "versions", hashedPath),
+			featureIds,
+			workingtree.WorkingTreeValue{ FileCheckSum: fileCheckSum, SavedCheckSum: savedCheckSum },
+		)
+
+		filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedCheckSum))
 	}
 
 	filesystem.RemoveFile(filepath.Join(rootDir, ".features", "merge-tmp"))
@@ -814,7 +851,7 @@ func RebaseFile(path string, finalMessage bool) {
 }
 
 func GetCurrentStateName(path string) string {
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	var currentFeaturesNamesTurnedOn []string = []string{}
@@ -854,7 +891,8 @@ func AllVersionFeatureDetails() {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
-			VersionFeatureDetailsFromPath(utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path))))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+			VersionFeatureDetailsFromPath(recoveredPath)
 			return fs.SkipDir
 		}
 
@@ -868,7 +906,7 @@ func AllVersionFeatureDetails() {
 
 func VersionFeatureDetailsFromPath(path string) {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -982,7 +1020,7 @@ func selectFeatureState(title string) string {
 
 func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemote []string) []string {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(parsedPath)
+	hashedPath := utils.HashPath(parsedPath)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
@@ -1016,7 +1054,7 @@ func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemo
 	}
 
 	if found {
-		for ids, checksum := range tree {
+		for ids, workingTreeValue := range tree {
 			idsSlice := workingtree.StringToStringSlice(ids)
 
 			for _, idSlice := range idsSlice {
@@ -1037,7 +1075,7 @@ func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemo
 					}
 					
 					workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), ids)
-					filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+					filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 					break
 				}
 			}
@@ -1062,7 +1100,7 @@ func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemo
 
 func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToPromote []string) []string {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashFilePath(parsedPath)
+	hashedPath := utils.HashPath(parsedPath)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
@@ -1071,7 +1109,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 	var foundedIds []string = []string{}
 	var foldersToDelete []string = []string{}
 
-	for ids, checksum := range tree {
+	for ids, workingTreeValue := range tree {
 		idsSlice := workingtree.StringToStringSlice(ids)
 
 		if len(idsSlice) == len(featureNamesToPromote) {
@@ -1094,7 +1132,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 
 				// make copy
 
-				filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum), filepath.Join(rootDir, ".features", "feature-tmp"))
+				filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum), filepath.Join(rootDir, ".features", "feature-tmp"))
 				
 				break
 			}
@@ -1102,7 +1140,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 	}
 
 	if found {
-		for ids, checksum := range tree {
+		for ids, workingTreeValue := range tree {
 			idsSlice := workingtree.StringToStringSlice(ids)
 
 			for _, idSlice := range idsSlice {
@@ -1123,7 +1161,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 					}
 					
 					workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), ids)
-					filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+					filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 					break
 				}
 			}
@@ -1137,7 +1175,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 			filesystem.FileCopy(filepath.Join(rootDir, ".features", "feature-tmp"), filepath.Join(rootDir, parsedPath))
 			foldersToDelete = append(foldersToDelete, fullPath)
 		} else {
-			for ids, checksum := range newTree {
+			for ids, workingTreeValue := range newTree {
 				idsSlice := workingtree.StringToStringSlice(ids)
 				var names []string = []string{}
 
@@ -1154,7 +1192,7 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 
 				Merge(
 					filepath.Join(rootDir, ".features", "feature-tmp"),
-					filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum),
+					filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum),
 					filepath.Join(rootDir, ".features", "versions", hashedPath, "base"),
 					strings.Join(featureNamesToPromote, "+"),
 					strings.Join(names, "+"),
@@ -1162,13 +1200,18 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 				)
 
 				workingtree.Remove(filepath.Join(rootDir, ".features", "versions", hashedPath), ids)
-				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, checksum))
+				filesystem.RemoveFile(filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValue.SavedCheckSum))
 
-				newCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
-				newVersionChecksum := strings.Join(append(idsSlice, newCheckSum), "+")
+				fileCheckSum := filesystem.FileGenerateCheckSum(filepath.Join(rootDir, ".features", "merge-tmp"))
+				savedChecksum := utils.GenerateCheckSumFromString(append(idsSlice, fileCheckSum)...)
 
-				workingtree.Add(filepath.Join(rootDir, ".features", "versions", hashedPath), idsSlice, newVersionChecksum)
-				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, newVersionChecksum))
+				workingtree.Add(
+					filepath.Join(rootDir, ".features", "versions", hashedPath),
+					idsSlice,
+					workingtree.WorkingTreeValue{ FileCheckSum: fileCheckSum, SavedCheckSum: savedChecksum },
+				)
+
+				filesystem.FileCopy(filepath.Join(rootDir, ".features", "merge-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, savedChecksum))
 			}
 
 			// Change base to the feature/state promoted
@@ -1213,9 +1256,9 @@ func VersionPromote(finalMessage bool) {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
-			parsedPath := utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
 
-			folderToDelete := VersionPromoteOnPath(path, parsedPath, parsedSelectsNames)
+			folderToDelete := VersionPromoteOnPath(path, recoveredPath, parsedSelectsNames)
 
 			foldersToDelete = append(foldersToDelete, folderToDelete...)
 
@@ -1268,9 +1311,9 @@ func VersionDemote(finalMessage bool) {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
-			parsedPath := utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
 
-			folderToDelete := VersionDemoteOnPath(path, parsedPath, parsedSelectsNames)
+			folderToDelete := VersionDemoteOnPath(path, recoveredPath, parsedSelectsNames)
 
 			foldersToDelete = append(foldersToDelete, folderToDelete...)
 

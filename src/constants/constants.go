@@ -27,5 +27,6 @@ var (
 
 var (
 	FeatureFolder = ".features"
-	WorkingTreeDirectory = "_workingtree"
+	WorkingTreeDirectory = "_wt"
+    WorkingTreeFile = "working_tree_manager"
 )

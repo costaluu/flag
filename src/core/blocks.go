@@ -211,7 +211,8 @@ func ListAllBlocks() map[string][]types.BlockFeature {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "blocks") != path {
-			blockSet[utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path)))] = ListBlocksFromPath(utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path))))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+			blockSet[recoveredPath] = ListBlocksFromPath(recoveredPath)
 			
 			return fs.SkipDir
 		}
@@ -231,7 +232,7 @@ func ListBlocksFromPath(path string) []types.BlockFeature {
 
 	var features []types.BlockFeature = []types.BlockFeature{}
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	err := filepath.WalkDir(filepath.Join(rootDir, ".features", "blocks", hashedPath), func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -310,7 +311,9 @@ func AllBlocksDetails() {
 		}
 
 		if d.IsDir() && filepath.Join(rootDir, ".features", "blocks") != path {
-			BlockDetails(utils.ReverseHashFilePath(filepath.Base(utils.NormalizePath(path))))
+			recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+			BlockDetails(recoveredPath)
+
 			return fs.SkipDir
 		}
 
@@ -324,7 +327,7 @@ func AllBlocksDetails() {
 
 func UnSyncAllBlocksFromPath(path string) {
 	var rootDir string = git.GetRepositoryRoot()
-	var hashedPath = utils.HashFilePath(path)
+	var hashedPath = utils.HashPath(path)
 
 	features := ListBlocksFromPath(path)
 
@@ -337,7 +340,7 @@ func UnSyncAllBlocksFromPath(path string) {
 
 func RemoveAllUnsyncedBlocksFromPath(path string) {
 	var rootDir string = git.GetRepositoryRoot()
-	var hashedPath = utils.HashFilePath(path)
+	var hashedPath = utils.HashPath(path)
 
 	features := ListBlocksFromPath(path)
 
@@ -409,7 +412,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				} else if state == constants.STATE_OFF {
 					var foundBlockById *types.Match = nil
@@ -437,7 +440,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				} else {
 					continue
@@ -470,7 +473,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				} else if state == constants.STATE_OFF {
 					continue
@@ -501,7 +504,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				}
 			} else {
@@ -534,7 +537,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				} else {
 					var foundBlockById *types.Match = nil
@@ -563,7 +566,7 @@ func ToggleBlockFeature(featureName string, state string) {
 
 					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
 
-					hashedPath := utils.HashFilePath(path)
+					hashedPath := utils.HashPath(path)
 					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
 				}
 			}
@@ -609,7 +612,7 @@ func PromoteBlockFeature(featureName string) {
 
 	for path, blockList := range blocksSet {
 		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
-		hashedPath := utils.HashFilePath(path)
+		hashedPath := utils.HashPath(path)
 		
 		for _, block := range blockList {
 			if block.State == constants.STATE_DEV || block.State == constants.STATE_ON {
@@ -660,7 +663,7 @@ func PromoteBlockFeature(featureName string) {
 		}
 	}
 	
-	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.SuccessTextStyle("promoted")))
+	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.GreenTextStyle("promoted")))
 }
 
 func DemoteBlockFeature(featureName string) {
@@ -689,7 +692,7 @@ func DemoteBlockFeature(featureName string) {
 
 	for path, blockList := range blocksSet {
 		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
-		hashedPath := utils.HashFilePath(path)
+		hashedPath := utils.HashPath(path)
 
 		for _, block := range blockList {
 			if block.State == constants.STATE_DEV || block.State == constants.STATE_OFF {
@@ -740,5 +743,5 @@ func DemoteBlockFeature(featureName string) {
 		}
 	}
 
-	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.ErrorTextStyle("demoted")))
+	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.RedTextStyle("demoted")))
 }

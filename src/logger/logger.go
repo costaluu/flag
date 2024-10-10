@@ -53,11 +53,11 @@ func Result[T any](msg T) {
 }
 
 func Error[T any](msg T) {
-	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.ErrorTextStyle("error"), styles.SecondaryTextStyle(msg))
+	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.RedTextStyle("error"), styles.SecondaryTextStyle(msg))
 }
 
 func Fatal[T any](msg T) {
-	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.ErrorTextStyle("fatal"), styles.SecondaryTextStyle(msg))
+	fmt.Printf("%s  ❌  %s  %v\n", chevronRight, styles.RedTextStyle("fatal"), styles.SecondaryTextStyle(msg))
 	debug.PrintStack()
 	os.Exit(0)
 }

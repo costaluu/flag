@@ -19,7 +19,7 @@ import (
 func handleDeleted(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, "blocks", hashedPath))
 	
@@ -37,12 +37,13 @@ func handleDeleted(path string) {
 func handleVersion(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	versionExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
 	if versionExists {	
-		hasChangesWithoutSave := LookForChangesInBase(path)
+		hasChangesWithoutSave := VersionLookForUntrackedChanges(path)
+
 		name := GetCurrentStateName(path)
 		tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 		features := GetVersionFeaturesFromPath(hashedPath)
@@ -130,7 +131,7 @@ func handleVersion(path string) {
 func HandleBlock(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 
-	hashedPath := utils.HashFilePath(path)
+	hashedPath := utils.HashPath(path)
 
 	blockExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 
@@ -138,6 +139,7 @@ func HandleBlock(path string) {
 	
 	if len(matches) > 0 && !blockExists {
 		filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
+		filesystem.FileWriteContentToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, "_path"), path)
 	} else if blockExists && len(matches) == 0 {
 		filesystem.FileDeleteFolder(filepath.Join(rootDir, ".features", "blocks", hashedPath))
 	}
@@ -164,8 +166,8 @@ func HandleBlock(path string) {
 				}
 			}
 
-			oldString := GetFeatureTypeDelimeterString(match, false)
-			match.MatchType = "feature + DEFAULT"
+			oldString := GetFeatureTypeDelimeterString(match, match.FoundId)
+			match.MatchType = "FEATURE + DEFAULT"
 			newString := GetFeatureTypeDelimeterString(match, true)
 
 			ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)

@@ -10,10 +10,10 @@ import (
 )
 
 var VERSION = "dev"
-  
+
 func main() {
 	app := &cli.App{
-		Name: constants.APP_NAME,
+		Name:    constants.APP_NAME,
 		Version: VERSION,
 		Authors: []*cli.Author{
 			&cli.Author{
@@ -21,7 +21,7 @@ func main() {
 			},
 		},
 		Usage: "flag is a configuration-based feature flag manager",
-        Commands: []*cli.Command{
+		Commands: []*cli.Command{
 			commands.InitCommand,
 			commands.SyncCommand,
 			commands.ReportCommand,
@@ -29,10 +29,10 @@ func main() {
 			commands.BlocksFeaturesCommand,
 			commands.VersionsFeaturesCommand,
 			commands.UpdateCommand,
-    	},
+		},
 	}
 
-    if err := app.Run(os.Args); err != nil {
-        log.Fatal(err)
-    }
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
 }
