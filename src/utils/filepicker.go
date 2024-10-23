@@ -109,3 +109,9 @@ func PickAllFiles(title string) components.FileListItem {
 
 	return result
 }
+
+func PickCustomFiles(title string, items[]components.FileListItem) components.FileListItem {
+	result := components.FilePickerList(title, items)
+
+	return result
+}

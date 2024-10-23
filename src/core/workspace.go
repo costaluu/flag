@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/costaluu/flag/constants"
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
@@ -102,4 +103,14 @@ func WorkspaceReport() {
 
 	AllBlocksDetails()
 	AllVersionFeatureDetails()
+}
+
+func GlobalToggle(featureName string, state string) {
+	ToggleBlockFeature(featureName, state) // on | off | dev
+
+	if state == constants.STATE_DEV {
+		ToggleVersionFeature(featureName, constants.STATE_ON) // on | off
+	} else {
+		ToggleVersionFeature(featureName, state) // on | off
+	}
 }

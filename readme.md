@@ -93,24 +93,26 @@ Flag also supports operations like updating specific features, creating new stat
 
 ```
 NAME:
-   flag - flag is a branch-level feature flag manager
+   flag - flag is a configuration-based feature flag manager
 
 USAGE:
    flag [global options] command [command options]
 
 VERSION:
-   v0.0.1
+   v0.0.6
 
 AUTHOR:
    costaluu
 
 COMMANDS:
    init        creates a new workspace
-   sync        updates all features on created, modified, deleted files
+   sync        updates all features on created, modifed, deleted files
    report      shows a workspace report of features
-   delimeters  operations for delimiters
-   blocks      operations for block features
-   versions     operations for version-based features
+   delimeters  operations for delimeters
+   blocks      operations for blocks features
+   versions    operations for versions features
+   toggle      toggles a feature to on, off or dev
+   update      download the latest version of flag
    help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:

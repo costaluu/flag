@@ -358,7 +358,6 @@ func RemoveAllUnsyncedBlocksFromPath(path string) {
 }
 
 func ToggleBlockFeature(featureName string, state string) {
-	var rootDir string = git.GetRepositoryRoot()
 	blocksSet := ListAllBlocks()
 
 	var foundFeature bool = false
@@ -378,199 +377,13 @@ func ToggleBlockFeature(featureName string, state string) {
 	}
 
 	if !foundFeature {
-		logger.Result[string](fmt.Sprintf("feature %s does not exists"))
+		logger.Info[string](fmt.Sprintf("feature %s does not exists on blocks", featureName))
+		
+		return
 	}
 
 	for path, blockList := range blocksSet {
-		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
-
-		for _, block := range blockList {
-			if block.State == constants.STATE_DEV {
-				if state == constants.STATE_ON {
-					var foundBlockById *types.Match = nil
-					
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = foundBlockById.DefaultContent
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "FEATURE"
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				} else if state == constants.STATE_OFF {
-					var foundBlockById *types.Match = nil
-					
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = foundBlockById.FeatureContent
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "DEFAULT"
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				} else {
-					continue
-				}
-			} else if block.State == constants.STATE_OFF {
-				if state == constants.STATE_ON {
-					var foundBlockById *types.Match = nil
-						
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = foundBlockById.DefaultContent
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "FEATURE"
-					newMatch.FeatureContent = block.SwapContent
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				} else if state == constants.STATE_OFF {
-					continue
-				} else {
-					var foundBlockById *types.Match = nil
-						
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = ""
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "FEATURE + DEFAULT"
-					newMatch.FeatureContent = block.SwapContent
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				}
-			} else {
-				if state == constants.STATE_ON {
-					continue
-				} else if state == constants.STATE_OFF {
-					var foundBlockById *types.Match = nil
-						
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = foundBlockById.FeatureContent
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "DEFAULT"
-					newMatch.DefaultContent = block.SwapContent
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				} else {
-					var foundBlockById *types.Match = nil
-						
-					for _, match := range featuresMatch {
-						if match.Id == block.Id && match.FeatureName == featureName {
-							foundBlockById = &match
-							break;
-						}
-					}
-
-					if foundBlockById == nil {
-						continue
-					}
-
-					tempBlock := block
-					tempBlock.State = state
-					tempBlock.SwapContent = ""
-
-					newMatch := *foundBlockById
-					newMatch.MatchType = "FEATURE + DEFAULT"
-					newMatch.DefaultContent = block.SwapContent
-
-					oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
-					newString := GetFeatureTypeDelimeterString(newMatch, true)
-
-					ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-
-					hashedPath := utils.HashPath(path)
-					filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
-				}
-			}
-		}
+		ToggleFeatureOnPath(featureName, state, path, blockList)
 	}
 
 	var stateStyle string
@@ -584,6 +397,199 @@ func ToggleBlockFeature(featureName string, state string) {
 	}
 
 	logger.Success[string](fmt.Sprintf("feature %s toggled %s", styles.AccentTextStyle(featureName), stateStyle))
+}
+
+func ToggleFeatureOnPath(featureName string, state string, path string, blockList []types.BlockFeature) {
+	var rootDir string = git.GetRepositoryRoot()
+	featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
+
+	for _, block := range blockList {
+		if block.State == constants.STATE_DEV {
+			if state == constants.STATE_ON {
+				var foundBlockById *types.Match = nil
+				
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = foundBlockById.DefaultContent
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "FEATURE"
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			} else if state == constants.STATE_OFF {
+				var foundBlockById *types.Match = nil
+				
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = foundBlockById.FeatureContent
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "DEFAULT"
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			} else {
+				continue
+			}
+		} else if block.State == constants.STATE_OFF {
+			if state == constants.STATE_ON {
+				var foundBlockById *types.Match = nil
+					
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = foundBlockById.DefaultContent
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "FEATURE"
+				newMatch.FeatureContent = block.SwapContent
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			} else if state == constants.STATE_OFF {
+				continue
+			} else {
+				var foundBlockById *types.Match = nil
+					
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = ""
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "FEATURE + DEFAULT"
+				newMatch.FeatureContent = block.SwapContent
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			}
+		} else {
+			if state == constants.STATE_ON {
+				continue
+			} else if state == constants.STATE_OFF {
+				var foundBlockById *types.Match = nil
+					
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = foundBlockById.FeatureContent
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "DEFAULT"
+				newMatch.DefaultContent = block.SwapContent
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			} else {
+				var foundBlockById *types.Match = nil
+					
+				for _, match := range featuresMatch {
+					if match.Id == block.Id && match.FeatureName == featureName {
+						foundBlockById = &match
+						break;
+					}
+				}
+
+				if foundBlockById == nil {
+					continue
+				}
+
+				tempBlock := block
+				tempBlock.State = state
+				tempBlock.SwapContent = ""
+
+				newMatch := *foundBlockById
+				newMatch.MatchType = "FEATURE + DEFAULT"
+				newMatch.DefaultContent = block.SwapContent
+
+				oldString := GetFeatureTypeDelimeterString(*foundBlockById, true)
+				newString := GetFeatureTypeDelimeterString(newMatch, true)
+
+				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+
+				hashedPath := utils.HashPath(path)
+				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", tempBlock.Id)), tempBlock)
+			}
+		}
+	}
 }
 
 func PromoteBlockFeature(featureName string) {
@@ -607,54 +613,12 @@ func PromoteBlockFeature(featureName string) {
 	}
 
 	if !foundFeature {
-		logger.Result[string](fmt.Sprintf("feature %s does not exists"))
+		logger.Result[string](fmt.Sprintf("feature %s does not exists on blocks"))
 	}
 
 	for path, blockList := range blocksSet {
-		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
 		hashedPath := utils.HashPath(path)
-		
-		for _, block := range blockList {
-			if block.State == constants.STATE_DEV || block.State == constants.STATE_ON {
-				var foundFeatureById *types.Match = nil
-					
-				for _, match := range featuresMatch {
-					if match.Id == block.Id && match.FeatureName == featureName {
-						foundFeatureById = &match
-						break;
-					}
-				}
-
-				if foundFeatureById == nil {
-					continue
-				}
-
-				oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
-				newString := foundFeatureById.FeatureContent
-
-				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-			} else {
-				var foundFeatureById *types.Match = nil
-					
-				for _, match := range featuresMatch {
-					if match.Id == block.Id && match.FeatureName == featureName {
-						foundFeatureById = &match
-						break;
-					}
-				}
-
-				if foundFeatureById == nil {
-					continue
-				}
-
-				oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
-				newString := block.SwapContent
-
-				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-			}
-			
-			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", block.Id)))
-		}
+		PromoteBlockFeatureOnPath(path, featureName, blockList)
 
 		blocks := ListBlocksFromPath(path)
 
@@ -664,6 +628,54 @@ func PromoteBlockFeature(featureName string) {
 	}
 	
 	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.GreenTextStyle("promoted")))
+}
+
+func PromoteBlockFeatureOnPath(path string, featureName string, blockList []types.BlockFeature) {
+	var rootDir string = git.GetRepositoryRoot()
+	featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
+	hashedPath := utils.HashPath(path)
+		
+	for _, block := range blockList {
+		if block.State == constants.STATE_DEV || block.State == constants.STATE_ON {
+			var foundFeatureById *types.Match = nil
+				
+			for _, match := range featuresMatch {
+				if match.Id == block.Id && match.FeatureName == featureName {
+					foundFeatureById = &match
+					break;
+				}
+			}
+
+			if foundFeatureById == nil {
+				continue
+			}
+
+			oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
+			newString := foundFeatureById.FeatureContent
+
+			ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+		} else {
+			var foundFeatureById *types.Match = nil
+				
+			for _, match := range featuresMatch {
+				if match.Id == block.Id && match.FeatureName == featureName {
+					foundFeatureById = &match
+					break;
+				}
+			}
+
+			if foundFeatureById == nil {
+				continue
+			}
+
+			oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
+			newString := block.SwapContent
+
+			ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+		}
+		
+		filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", block.Id)))
+	}
 }
 
 func DemoteBlockFeature(featureName string) {
@@ -691,50 +703,8 @@ func DemoteBlockFeature(featureName string) {
 	}
 
 	for path, blockList := range blocksSet {
-		featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
 		hashedPath := utils.HashPath(path)
-
-		for _, block := range blockList {
-			if block.State == constants.STATE_DEV || block.State == constants.STATE_OFF {
-				var foundFeatureById *types.Match = nil
-					
-				for _, match := range featuresMatch {
-					if match.Id == block.Id && match.FeatureName == featureName {
-						foundFeatureById = &match
-						break;
-					}
-				}
-
-				if foundFeatureById == nil {
-					continue
-				}
-
-				oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
-				newString := foundFeatureById.DefaultContent
-
-				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-			} else {
-				var foundFeatureById *types.Match = nil
-					
-				for _, match := range featuresMatch {
-					if match.Id == block.Id && match.FeatureName == featureName {
-						foundFeatureById = &match
-						break;
-					}
-				}
-
-				if foundFeatureById == nil {
-					continue
-				}
-
-				oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
-				newString := block.SwapContent
-
-				ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
-			}
-
-			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", block.Id)))
-		}
+		DemoteBlockFeatureOnPath(path, featureName, blockList)
 
 		blocks := ListBlocksFromPath(path)
 
@@ -744,4 +714,52 @@ func DemoteBlockFeature(featureName string) {
 	}
 
 	logger.Success[string](fmt.Sprintf("feature %s %s", styles.AccentTextStyle(featureName), styles.RedTextStyle("demoted")))
+}
+
+func DemoteBlockFeatureOnPath(path string, featureName string, blockList []types.BlockFeature) {
+	var rootDir string = git.GetRepositoryRoot()
+	featuresMatch := ExtractMatchDataFromFile(filepath.Join(rootDir, path))
+	hashedPath := utils.HashPath(path)
+
+	for _, block := range blockList {
+		if block.State == constants.STATE_DEV || block.State == constants.STATE_OFF {
+			var foundFeatureById *types.Match = nil
+				
+			for _, match := range featuresMatch {
+				if match.Id == block.Id && match.FeatureName == featureName {
+					foundFeatureById = &match
+					break;
+				}
+			}
+
+			if foundFeatureById == nil {
+				continue
+			}
+
+			oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
+			newString := foundFeatureById.DefaultContent
+
+			ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+		} else {
+			var foundFeatureById *types.Match = nil
+				
+			for _, match := range featuresMatch {
+				if match.Id == block.Id && match.FeatureName == featureName {
+					foundFeatureById = &match
+					break;
+				}
+			}
+
+			if foundFeatureById == nil {
+				continue
+			}
+
+			oldString := GetFeatureTypeDelimeterString(*foundFeatureById, true)
+			newString := block.SwapContent
+
+			ReplaceStringInFile(filepath.Join(rootDir, path), oldString, newString)
+		}
+
+		filesystem.RemoveFile(filepath.Join(rootDir, ".features", "blocks", hashedPath, fmt.Sprintf("%s.block", block.Id)))
+	}
 }

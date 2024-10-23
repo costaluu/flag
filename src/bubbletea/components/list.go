@@ -106,6 +106,12 @@ func PickerList(title string, items []ListItem) ListItem {
 	if _, err := p.Run(); err != nil {
 		log.Fatalln(err)
 	}
+
+	ListResultTemp := ListResult 
 	
-	return ListResult
+	ListResult.ItemDesc = ""
+	ListResult.ItemTitle = ""
+	ListResult.ItemValue = ""
+
+	return ListResultTemp
 }

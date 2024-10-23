@@ -51,8 +51,6 @@ func ListAllVersionsFeature() map[string][]types.VersionFeature {
 }
 
 func ToggleVersionFeature(featureName string, state string) {
-	var rootDir string = git.GetRepositoryRoot()
-
 	versionsSet := ListAllVersionsFeature()
 
 	var foundFeature bool = false
@@ -72,20 +70,11 @@ func ToggleVersionFeature(featureName string, state string) {
 	}
 
 	if !foundFeature {
-		logger.Result[string](fmt.Sprintf("feature %s does not exists", featureName))
+		logger.Result[string](fmt.Sprintf("feature %s does not exists on versions", featureName))
 	}
 
 	for path, features := range versionsSet {
-		for _, feature := range features {
-			if feature.Name == featureName {
-				feature.State = state
-
-				hashedPath := utils.HashPath(path)
-				filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "versions", hashedPath, fmt.Sprintf("%s.feature", feature.Id)), feature)
-			}
-		}
-
-		BuildBaseForFile(path)
+		ToggleVersionFeatureOnPath(path, featureName, state, features)
 	}
 
 	var stateStyle string
@@ -97,6 +86,21 @@ func ToggleVersionFeature(featureName string, state string) {
 	}
 
 	logger.Success[string](fmt.Sprintf("feature %s toggled %s", styles.AccentTextStyle(featureName), stateStyle))
+}
+
+func ToggleVersionFeatureOnPath(path string, featureName string, state string, features []types.VersionFeature) {
+	var rootDir string = git.GetRepositoryRoot()
+
+	for _, feature := range features {
+		if feature.Name == featureName {
+			feature.State = state
+
+			hashedPath := utils.HashPath(path)
+			filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "versions", hashedPath, fmt.Sprintf("%s.feature", feature.Id)), feature)
+		}
+	}
+
+	BuildBaseForFile(path)
 }
 
 type FeatureStateOption struct {
@@ -144,8 +148,6 @@ func ListAllFeatureStateOptions() map[string]map[string]FeatureStateOption {
 
 func GetVersionFeaturesStatesFromPath(filePath string) []FeatureStateOption {
 	var rootDir string = git.GetRepositoryRoot()
-
-	fmt.Println(filePath)
 
 	hashedPath := utils.HashPath(filePath)
 	features := GetVersionFeaturesFromPath(hashedPath)
@@ -1018,9 +1020,9 @@ func selectFeatureState(title string) string {
 	return selected.ItemValue
 }
 
-func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemote []string) []string {
+func VersionDemoteOnPath(internalFeaturePath string, path string, featuresNamesToDemote []string) []string {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashPath(parsedPath)
+	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
@@ -1086,21 +1088,21 @@ func VersionDemoteOnPath(fullPath string, parsedPath string, featuresNamesToDemo
 		if len(newTree) == 0 {
 			// restore base and mark to delete folder
 
-			filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, "base"), filepath.Join(rootDir, parsedPath))
-			foldersToDelete = append(foldersToDelete, fullPath)
+			filesystem.FileCopy(filepath.Join(rootDir, ".features", "versions", hashedPath, "base"), filepath.Join(rootDir, path))
+			foldersToDelete = append(foldersToDelete, internalFeaturePath)
 		} else {
 			// Build a new base
 
-			BuildBaseForFile(parsedPath)
+			BuildBaseForFile(path)
 		}
 	}
 
 	return foldersToDelete
 }
 
-func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToPromote []string) []string {
+func VersionPromoteOnPath(internalFeaturePath string, path string, featureNamesToPromote []string) []string {
 	var rootDir string = git.GetRepositoryRoot()
-	hashedPath := utils.HashPath(parsedPath)
+	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
@@ -1172,8 +1174,8 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 		if len(newTree) == 0 {
 			// restore base and mark to delete folder
 
-			filesystem.FileCopy(filepath.Join(rootDir, ".features", "feature-tmp"), filepath.Join(rootDir, parsedPath))
-			foldersToDelete = append(foldersToDelete, fullPath)
+			filesystem.FileCopy(filepath.Join(rootDir, ".features", "feature-tmp"), filepath.Join(rootDir, path))
+			foldersToDelete = append(foldersToDelete, internalFeaturePath)
 		} else {
 			for ids, workingTreeValue := range newTree {
 				idsSlice := workingtree.StringToStringSlice(ids)
@@ -1217,15 +1219,20 @@ func VersionPromoteOnPath(fullPath string, parsedPath string, featureNamesToProm
 			// Change base to the feature/state promoted
 
 			filesystem.FileCopy(filepath.Join(rootDir, ".features", "feature-tmp"), filepath.Join(rootDir, ".features", "versions", hashedPath, "base"))
-			
-			// Clean Up
-
-			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "feature-tmp"))
-			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "merge-tmp"))
 
 			// Build a new base
+			
+			BuildBaseForFile(path)
+		}
 
-			BuildBaseForFile(parsedPath)
+		// Clean Up
+		
+		if filesystem.FileExists(filepath.Join(rootDir, ".features", "feature-tmp")) {
+			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "feature-tmp"))
+		}
+
+		if filesystem.FileExists(filepath.Join(rootDir, ".features", "merge-tmp")) {
+			filesystem.RemoveFile(filepath.Join(rootDir, ".features", "merge-tmp"))
 		}
 	}
 
@@ -1283,7 +1290,7 @@ func VersionPromote(finalMessage bool) {
 			plural = "s"
 		}
 
-		logger.Success[string](fmt.Sprintf("feature%s %s promoted", plural, styles.SuccessTextStyle(strings.Join(parsedSelectsNames, "+"))))
+		logger.Success[string](fmt.Sprintf("feature%s %s %s", plural, styles.AccentTextStyle(strings.Join(parsedSelectsNames, "+")), styles.GreenTextStyle("promoted")))
 	}
 }
 
@@ -1338,7 +1345,7 @@ func VersionDemote(finalMessage bool) {
 			plural = "s"
 		}
 
-		logger.Success[string](fmt.Sprintf("feature%s %s demoted", plural, styles.ErrorTextStyle(strings.Join(parsedSelectsNames, "+"))))
+		logger.Success[string](fmt.Sprintf("feature%s %s %s", plural, styles.AccentTextStyle(strings.Join(parsedSelectsNames, "+")), styles.RedTextStyle("demoted")))
 	}
 }
 

@@ -2,11 +2,16 @@ package commands
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/costaluu/flag/bubbletea/components"
 	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/core"
+	filesystem "github.com/costaluu/flag/fs"
+	"github.com/costaluu/flag/git"
 	"github.com/costaluu/flag/logger"
+	"github.com/costaluu/flag/styles"
 	"github.com/costaluu/flag/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -15,6 +20,9 @@ var VersionsFeaturesToggleCommand *cli.Command = &cli.Command{
 	Name:      "toggle",
 	Usage:     "toggle a feature to on or off",
 	ArgsUsage: `<feature_name> <on|off>`,
+	Flags: []cli.Flag{
+		&cli.BoolFlag{Name: "specific", Aliases: []string{"s"}, Usage: "toggles a feature in a specific file path."},
+	},
 	Action: func(ctx *cli.Context) error {
 		args := ctx.Args().Slice()
 
@@ -28,7 +36,41 @@ var VersionsFeaturesToggleCommand *cli.Command = &cli.Command{
 			logger.Result[string]("invalid state. use on|off")
 		}
 
-		core.ToggleVersionFeature(args[0], state)
+		if ctx.Bool("specific") {
+			versionsSet := core.ListAllVersionsFeature()
+
+			var items []components.FileListItem = []components.FileListItem{}
+			
+			for path, versionList := range versionsSet {
+				for _, version := range versionList {
+					if version.Name == args[0] {
+						items = append(items, components.FileListItem{ ItemTitle: path, Desc: version.Name })
+						break
+					}
+				}
+			}
+
+			result := utils.PickCustomFiles("Pick a version base", items)
+
+			if result.ItemTitle != "" {
+				hashedPath := utils.HashPath(result.ItemTitle)
+				core.ToggleVersionFeatureOnPath(result.ItemTitle, args[0], state, core.GetVersionFeaturesFromPath(hashedPath))
+
+				var stateStyle string
+
+				if state == constants.STATE_ON {
+					stateStyle = styles.GreenTextStyle(state)
+				} else {
+					stateStyle = styles.RedTextStyle(state)
+				}
+
+				logger.Success[string](fmt.Sprintf("feature %s toggled %s", styles.AccentTextStyle(args[0]), stateStyle))
+			} else {
+				logger.Info[string]("please select one option to continue")
+			}
+		} else {
+			core.ToggleVersionFeature(args[0], state)
+		}
 
 		return nil
 	},
@@ -37,8 +79,75 @@ var VersionsFeaturesToggleCommand *cli.Command = &cli.Command{
 var VersionsFeaturesPromoteCommand *cli.Command = &cli.Command{
 	Name:      "promote",
 	Usage:     "promote a feature or state",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{Name: "specific", Aliases: []string{"s"}, Usage: "toggles a feature in a specific file path."},
+	},
 	Action: func(ctx *cli.Context) error {
-		core.VersionPromote(true)
+		if ctx.Bool("specific") {
+			featureStateListByPath := core.ListAllFeatureStateOptions()
+			var items []components.ListItem = []components.ListItem{}
+			
+			for path, featureStates := range featureStateListByPath {
+				items = append(items, components.ListItem{ ItemTitle: path, ItemDesc: fmt.Sprintf("%d features|states", len(featureStates)) })
+			}
+
+			selected := components.PickerList("Select a filepath", items)
+
+			if selected.ItemTitle != "" {
+				path := selected.ItemTitle
+
+				selected.ItemTitle = ""
+				selected.ItemDesc = ""
+				selected.ItemValue = ""
+
+				featureStateList := core.GetVersionFeaturesStatesFromPath(path)
+
+				items = []components.ListItem{}
+
+				for _, featureState := range featureStateList {
+					var isFeatureText string = "feature"
+
+					if len(featureState.Names) > 1 {
+						isFeatureText = "state"
+					}
+
+					items = append(items, components.ListItem{ 
+						ItemTitle: fmt.Sprintf("%s", strings.Join(featureState.Names, "+")),
+						ItemDesc: isFeatureText,
+						ItemValue: strings.Join(featureState.Names, "@_separator_@"),
+					})
+
+					selected = components.PickerList("Select a feature or state to promote", items)
+
+					if selected.ItemTitle != "" {
+						namesToPromote := strings.Split(selected.ItemValue, "@_separator_@")
+
+						var rootDir string = git.GetRepositoryRoot()
+						hashedPath := utils.HashPath(path)
+
+						folderToDelete := core.VersionPromoteOnPath(filepath.Join(rootDir, ".features", "versions", hashedPath), path, namesToPromote)
+
+						for _, folderToDelete := range folderToDelete {
+							filesystem.FileDeleteFolder(folderToDelete)
+						}
+
+						var plural string
+
+						if strings.Contains(selected.ItemTitle, "+") {
+							plural = "s"
+						}
+
+						logger.Success[string](fmt.Sprintf("feature%s %s %s on %s", plural, styles.AccentTextStyle(selected.ItemTitle), styles.GreenTextStyle("promoted"), styles.AccentTextStyle(path)))
+					} else {
+						logger.Info[string]("please select one option to continue")
+					}
+				}
+			} else {
+				logger.Info[string]("please select one option to continue")
+			}
+		} else {
+			core.VersionPromote(true)
+		}
 
 		return nil
 	},
@@ -48,8 +157,75 @@ var VersionsFeaturesDemoteCommand *cli.Command = &cli.Command{
 	Name:      "demote",
 	Usage:     "demote a feature",
 	ArgsUsage: `<feature_name>`,
+	Flags: []cli.Flag{
+		&cli.BoolFlag{Name: "specific", Aliases: []string{"s"}, Usage: "toggles a feature in a specific file path."},
+	},
 	Action: func(ctx *cli.Context) error {
-		core.VersionDemote(true)
+		if ctx.Bool("specific") {
+			featureStateListByPath := core.ListAllFeatureStateOptions()
+			var items []components.ListItem = []components.ListItem{}
+			
+			for path, featureStates := range featureStateListByPath {
+				items = append(items, components.ListItem{ ItemTitle: path, ItemDesc: fmt.Sprintf("%d features|states", len(featureStates)) })
+			}
+
+			selected := components.PickerList("Select a filepath", items)
+
+			if selected.ItemTitle != "" {
+				path := selected.ItemTitle
+
+				selected.ItemTitle = ""
+				selected.ItemDesc = ""
+				selected.ItemValue = ""
+
+				featureStateList := core.GetVersionFeaturesStatesFromPath(path)
+
+				items = []components.ListItem{}
+
+				for _, featureState := range featureStateList {
+					var isFeatureText string = "feature"
+
+					if len(featureState.Names) > 1 {
+						isFeatureText = "state"
+					}
+
+					items = append(items, components.ListItem{ 
+						ItemTitle: fmt.Sprintf("%s", strings.Join(featureState.Names, "+")),
+						ItemDesc: isFeatureText,
+						ItemValue: strings.Join(featureState.Names, "@_separator_@"),
+					})
+
+					selected = components.PickerList("Select a feature or state to demote", items)
+
+					if selected.ItemTitle != "" {
+						namesToPromote := strings.Split(selected.ItemValue, "@_separator_@")
+
+						var rootDir string = git.GetRepositoryRoot()
+						hashedPath := utils.HashPath(path)
+
+						folderToDelete := core.VersionDemoteOnPath(filepath.Join(rootDir, ".features", "versions", hashedPath), path, namesToPromote)
+
+						for _, folderToDelete := range folderToDelete {
+							filesystem.FileDeleteFolder(folderToDelete)
+						}
+
+						var plural string
+
+						if strings.Contains(selected.ItemTitle, "+") {
+							plural = "s"
+						}
+
+						logger.Success[string](fmt.Sprintf("feature%s %s %s on %s", plural, styles.AccentTextStyle(selected.ItemTitle), styles.RedTextStyle("demoted"), styles.AccentTextStyle(path)))
+					} else {
+						logger.Info[string]("please select one option to continue")
+					}
+				}
+			} else {
+				logger.Info[string]("please select one option to continue")
+			}
+		} else {
+			core.VersionDemote(true)
+		}
 
 		return nil
 	},
