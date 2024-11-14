@@ -38,19 +38,20 @@ func ListPresets() {
 	}
 
 	var headers []string = []string{"FEATURE", "STATE"}
-	
-	for presetName, featureList := range presets {
-		var titleStyle = 
+
+	var titleStyle = 
 			lipgloss.
 				NewStyle().
 				Padding(0, 1).
-				SetString(presetName).
+				SetString("Presets").
 				Background(lipgloss.Color(constants.AccentColor)).
 				Foreground(lipgloss.Color("255")).
 				Bold(true)
-		
 
-		fmt.Printf("\n\n%s\n\n", titleStyle.Render())
+	fmt.Printf("\n\n%s\n\n", titleStyle.Render())
+	
+	for presetName, featureList := range presets {
+		fmt.Printf("%s\n", styles.AccentTextStyle(presetName))
 
 		var data [][]string
 
