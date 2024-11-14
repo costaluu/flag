@@ -46,6 +46,8 @@ var delimeters types.Delimeters = map[string]types.Delimeter{
 		},
 }
 
+var presets types.Presets = make(types.Presets)
+
 func CheckWorkspaceFolder() bool {
 	rootDir := git.GetRepositoryRoot()
 
@@ -61,6 +63,7 @@ func CheckWorkspaceFolder() bool {
 	versionsExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions"))
 	blocksExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "blocks"))
 	delimetersExists := filesystem.FileExists(filepath.Join(rootDir, ".features", "delimeters"))
+	presetsExists := filesystem.FileExists(filepath.Join(rootDir, ".features", "delimeters"))
 
 	if !versionsExists && !blocksExists && !delimetersExists {
 		return false
@@ -78,6 +81,10 @@ func CheckWorkspaceFolder() bool {
 		filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
 	}
 
+	if !presetsExists {
+		filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "presets"), delimeters)
+	}
+
 	return true
 }
 
@@ -90,6 +97,7 @@ func CreateNewWorkspace() {
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "blocks"))
 	filesystem.FileCreateFolder(filepath.Join(rootDir, ".features", "versions"))
 	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "delimeters"), delimeters)
+	filesystem.FileWriteJSONToFile(filepath.Join(rootDir, ".features", "presets"), presets)
 
 	logger.Success[string]("folder .features created")
 }

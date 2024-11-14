@@ -19,12 +19,30 @@ import (
 var VersionsFeaturesToggleCommand *cli.Command = &cli.Command{
 	Name:      "toggle",
 	Usage:     "toggle a feature to on or off",
-	ArgsUsage: `<feature_name> <on|off>`,
+	ArgsUsage: `<feature_name|preset_name> <on|off>`,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{Name: "specific", Aliases: []string{"s"}, Usage: "toggles a feature in a specific file path."},
+		&cli.BoolFlag{Name: "preset", Aliases: []string{"p"}, Usage: "uses a preset instead of a feature"},
 	},
 	Action: func(ctx *cli.Context) error {
 		args := ctx.Args().Slice()
+
+		if ctx.Bool("preset") && len(args) == 1 {
+			presets := core.ReadPresets()
+			presetName := args[0]
+			
+			preset, exists := presets[presetName]
+
+			if !exists {
+				logger.Result[string](fmt.Sprintf("preset %s doest not exists", presetName))
+			}
+
+			for featureName, featureState := range preset {
+				core.ToggleVersionFeature(featureName, featureState)
+			}
+
+			return nil
+		}
 
 		if len(args) < 2 {
 			logger.Result[string](fmt.Sprintf("usage: %s versions %s %s", constants.COMMAND, ctx.Command.Name, ctx.Command.ArgsUsage))

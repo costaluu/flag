@@ -70,7 +70,8 @@ func ToggleVersionFeature(featureName string, state string) {
 	}
 
 	if !foundFeature {
-		logger.Result[string](fmt.Sprintf("feature %s does not exists on versions", featureName))
+		logger.Info[string](fmt.Sprintf("feature %s does not exists on versions", featureName))
+		return
 	}
 
 	for path, features := range versionsSet {

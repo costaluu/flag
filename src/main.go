@@ -26,6 +26,7 @@ func main() {
 			commands.SyncCommand,
 			commands.ReportCommand,
 			commands.DelimeterCommand,
+			commands.PresetCommand,
 			commands.BlocksFeaturesCommand,
 			commands.VersionsFeaturesCommand,
 			commands.ToggleCommand,

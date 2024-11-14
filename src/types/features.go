@@ -20,6 +20,8 @@ type Delimeter struct {
 
 type Delimeters map[string]Delimeter
 
+type Presets map[string]map[string]string
+
 type Feature struct {
 	Name  string
 	State string
