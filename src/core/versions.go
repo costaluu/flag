@@ -979,9 +979,10 @@ func VersionFeatureDetailsFromPath(path string) {
 		return len(data[i][0]) > len(data[j][0])
 	})
 
-	fmt.Printf("%s\n", styles.AccentTextStyle(path))
-
-	table.RenderTable(headers, data)
+	if len(data) > 0 {
+		fmt.Printf("%s\n", styles.AccentTextStyle(path))
+		table.RenderTable(headers, data)
+	}
 }
 
 func selectFeatureState(title string) string {

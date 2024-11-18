@@ -264,16 +264,14 @@ func ListBlocksFromPath(path string) []types.BlockFeature {
 }
 
 func BlockDetails(path string) {
-	fmt.Printf("%s\n", styles.AccentTextStyle(path))
-
 	blocks := ListBlocksFromPath(path)
-
+	
 	var featureSet map[string]types.BlockFeature = make(map[string]types.BlockFeature)
-
+	
 	for _, block := range blocks {
 		featureSet[block.Name] = block
 	}
-
+	
 	headers := []string{"NAME", "STATE"}
 	var data [][]string = [][]string{}
 
@@ -281,7 +279,10 @@ func BlockDetails(path string) {
 		data = append(data, []string{feature.Name, feature.State})
 	}
 
-	table.RenderTable(headers, data)
+	if len(featureSet) > 0 {
+		fmt.Printf("%s\n", styles.AccentTextStyle(path))
+		table.RenderTable(headers, data)
+	}
 }
 
 func AllBlocksDetails() {
