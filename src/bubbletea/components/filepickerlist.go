@@ -73,14 +73,14 @@ func FilePickerList(title string, items []FileListItem) FileListItem {
 
 	customDelegate.Styles.SelectedTitle = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(lipgloss.Color("130")).
-		Foreground(lipgloss.Color("250")).
+		BorderForeground(lipgloss.Color(constants.AccentColor)).
+		Foreground(lipgloss.Color(constants.AccentColor)).
 		Padding(0, 0, 0, 1)
 
 	customDelegate.Styles.SelectedDesc = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(lipgloss.Color("130")).
-		Foreground(lipgloss.Color("240")).
+		BorderForeground(lipgloss.Color(constants.AccentColor)).
+		Foreground(lipgloss.Color(constants.AccentDarkerColor)).
 		Padding(0, 0, 0, 1)
 	
 	var parsedItems []list.Item = []list.Item{}
