@@ -9,13 +9,6 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-// headers := []string{"FEATURE", "BLOCKS", "RECORDS", "LINKS"}
-// 	data := [][]string{
-// 		{"fttoooooooooooo", "DEV", "ON", "ON"},
-// 		{"fast", "DEV", "ON", "ON"},
-// 		{"s2i", "OFF", "OFF", "OFF"},
-// 	}
-
 func RenderTable(headers []string, rows [][]string) {
 	re := lipgloss.NewRenderer(os.Stdout)
 	baseStyle := re.NewStyle().Padding(0, 1)

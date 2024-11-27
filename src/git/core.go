@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -30,9 +31,7 @@ func runGitCommand(args ...string) ([]string, error) {
 
 func GetLastCommitInfo(path string) (string, string) {
 	repoRoot := GetRepositoryRoot()
-	// 
-	// Get untracked files
-	commitInfo, err := runGitCommand("log", "-1", "--pretty=format:'%an,%ad'", "--date=local", "--", filepath.Join(repoRoot, path))
+	commitInfo, err := runGitCommand("log", "-1", "--pretty=format:'%an,%ad'", "--date=format:'%x %X'", "--", filepath.Join(repoRoot, path))
 	
 	if err != nil {
 		logger.Fatal[error](err)
@@ -46,6 +45,19 @@ func GetLastCommitInfo(path string) (string, string) {
 		
 		author = commitInfo[0][1:]
 		date = commitInfo[1][0:len(commitInfo[1]) - 1]
+	}
+
+	if date == "NOT FOUND" {
+		fileInfo, err := os.Stat(filepath.Join(repoRoot, path))
+
+		if err != nil {
+			logger.Fatal[error](err)
+		}
+
+		lastModified := fileInfo.ModTime()
+
+		formattedTime := lastModified.Local().Format("02/01/06 15:04:05")
+		date = formattedTime
 	}
 
 	return author, date

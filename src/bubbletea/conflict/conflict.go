@@ -548,12 +548,9 @@ func FindGitConflicts(filePath string) ([]resolver.ConflictRecord) {
 
 func Resolve(title string) {
 	var rootDir string = git.GetRepositoryRoot()
-	// var iterator int = 0
 	var allConflictsSolved bool = false
 	
 	for !allConflictsSolved {
-		// iterator++
-	
 		conflicts := FindGitConflicts(filepath.Join(rootDir, ".features", "merge-tmp"))
 		processedConflicts := SolveConflicts(conflicts, filepath.Join(rootDir, ".features", "merge-tmp"), title)
 		var solvedConflicts []resolver.ConflictRecord
