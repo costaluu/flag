@@ -1,12 +1,12 @@
 package git
 
 import (
-	"os"
+	"bytes"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/costaluu/flag/diff3"
 	filesystem "github.com/costaluu/flag/fs"
 	"github.com/costaluu/flag/logger"
 )
@@ -26,6 +26,29 @@ func runGitCommand(args ...string) ([]string, error) {
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
 
 	return lines, nil
+}
+
+func GetLastCommitInfo(path string) (string, string) {
+	repoRoot := GetRepositoryRoot()
+	// 
+	// Get untracked files
+	commitInfo, err := runGitCommand("log", "-1", "--pretty=format:'%an,%ad'", "--date=local", "--", filepath.Join(repoRoot, path))
+	
+	if err != nil {
+		logger.Fatal[error](err)
+	}
+
+	author := "NOT FOUND"
+	date := "NOT FOUND"
+
+	if len(commitInfo) > 0 {
+		commitInfo = strings.Split(commitInfo[0], ",")
+		
+		author = commitInfo[0][1:]
+		date = commitInfo[1][0:len(commitInfo[1]) - 1]
+	}
+
+	return author, date
 }
 
 func GetRepositoryRoot() (string) {
@@ -52,41 +75,6 @@ func CheckGitRepository() bool {
 	result := strings.TrimSpace(string(out))
     
 	return result == "true"
-}
-
-func Merge3Way(fileAPath string, fileBasePath string, fileBPath string, featureA string, featureB string) bool {
-	repoRoot := GetRepositoryRoot()
-
-	fileA, err := os.Open(fileAPath)
-	defer fileA.Close()
-
-	if err != nil {
-		logger.Fatal[error](err)
-	}
-
-	fileBase, err := os.Open(fileBasePath)
-	defer fileBase.Close()
-
-	if err != nil {
-		logger.Fatal[error](err)
-	}
-	
-	fileB, err := os.Open(fileBPath)
-	defer fileB.Close()
-
-	if err != nil {
-		logger.Fatal[error](err)
-	}
-
-	result, err := diff3.Merge(fileA, fileBase, fileB, true, featureA, featureB)
-
-	if err != nil {
-		logger.Fatal[error](err)
-	}
-
-	filesystem.FileWrite(result.Result, filepath.Join(repoRoot, ".features", "merge-tmp"))
-
-	return result.Conflicts
 }
 
 // Filter applies a predicate function to each element in the input slice
@@ -147,4 +135,128 @@ func GetUntrackedFiles() []string {
 	return arrayFilter[string](untracked, func (path string) bool {
 		return !strings.Contains(path, ".features")
 	})
+}
+
+func isAlreadyCommitted(err error) bool {
+	return err != nil && bytes.Contains([]byte(err.Error()), []byte("nothing to commit"))
+}
+
+func isBranchExists(err error) bool {
+	return err != nil && bytes.Contains([]byte(err.Error()), []byte("already exists"))
+}
+
+func personalizeConflictMarkers(repoPath, versionALabel, versionBLabel string) bool {
+    tmpFile := "merge-tmp"
+
+	filePath := filepath.Join(repoPath, tmpFile)
+	
+	content := filesystem.FileRead(filePath)
+
+	customContent := strings.ReplaceAll(content, "<<<<<<< HEAD", fmt.Sprintf("<<<<<<< %s", versionALabel))
+	customContent = strings.ReplaceAll(customContent, ">>>>>>> version-b", fmt.Sprintf(">>>>>>> %s", versionBLabel))
+
+	filesystem.FileWriteContentToFile(filePath, customContent)
+
+	return strings.Contains(customContent, "<<<<<<< ")
+}
+
+func GitMerge(basePath string, versionAPath string, versionBPath string, versionALabel string, versionBLabel string) bool {
+	// Define the repository path
+	repoRoot := GetRepositoryRoot()
+	repoPath := filepath.Join(repoRoot, ".features", "tmp-folder")
+
+	var err error
+
+	if !filesystem.FileFolderExists(repoPath) {
+		filesystem.FileCreateFolder(repoPath)
+	}
+
+	run := func(args ...string) error {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = repoPath
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("git %s failed: %s", args, stderr.String())
+		}
+
+		return nil
+	}
+
+	err = run("init")
+
+	if err != nil {
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	tmpFile := "merge-tmp"
+
+	filesystem.FileCopy(basePath, filepath.Join(repoPath, tmpFile))
+
+	err = run("add", tmpFile)
+
+	if err != nil {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	err = run("commit", "-m", "Base file", "--allow-empty")
+
+	if err != nil && !isAlreadyCommitted(err) {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	err = run("checkout", "-b", "version-a")
+
+	if err != nil && !isBranchExists(err) {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	filesystem.FileCopy(versionAPath, filepath.Join(repoPath, tmpFile))
+
+	err = run("commit", "-am", "Version A", "--allow-empty")
+
+	if err != nil && !isAlreadyCommitted(err) {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	err = run("checkout", "-b", "version-b", "master")
+
+	if err != nil && !isBranchExists(err) {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	filesystem.FileCopy(versionBPath, filepath.Join(repoPath, tmpFile))
+
+	err = run("commit", "-am", "Version B", "--allow-empty")
+
+	if err != nil && !isAlreadyCommitted(err) {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	err = run("checkout", "master")
+
+	if err != nil {
+		fmt.Println(err)
+		logger.Result[string]("something went wrong during the merge of files")
+	}
+
+	run("merge", "--no-commit", "version-a")
+	run("merge", "--no-commit", "version-b")
+
+	hasConflicts := personalizeConflictMarkers(repoPath, versionALabel, versionBLabel)
+
+	mergedFilePath := filepath.Join(repoPath, tmpFile)
+
+	filesystem.FileCopy(mergedFilePath, filepath.Join(repoRoot, ".features", "merge-tmp"))
+
+	filesystem.FileDeleteFolder(repoPath)
+
+	return hasConflicts
 }

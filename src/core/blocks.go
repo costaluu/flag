@@ -272,11 +272,12 @@ func BlockDetails(path string) {
 		featureSet[block.Name] = block
 	}
 	
-	headers := []string{"NAME", "STATE"}
+	headers := []string{"NAME", "STATE", "AUTHOR", "DATE"}
 	var data [][]string = [][]string{}
 
 	for _, feature := range featureSet {
-		data = append(data, []string{feature.Name, feature.State})
+		author, date := git.GetLastCommitInfo(path)
+		data = append(data, []string{feature.Name, feature.State, author, date})
 	}
 
 	if len(featureSet) > 0 {

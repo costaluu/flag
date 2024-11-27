@@ -52,24 +52,40 @@ func RenderTable(headers []string, rows [][]string) {
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(re.NewStyle().Foreground(lipgloss.Color("238"))).
 		Headers(CapitalizeHeaders(fullHeaders)...).
-		Width(80).
 		Rows(data...).
 		StyleFunc(func(row, col int) lipgloss.Style {
+			var style lipgloss.Style = baseStyle
+			style = style.Foreground(lipgloss.Color("252"))
+
 			if row == 0 {
-				return headerStyle
+				style = headerStyle
+			}
+
+			if col == 0 {
+				style = style.Width(3)
+			}
+
+			if col == 2 {
+				if len(data[0]) == 6 {
+					style = style.Width(10)
+				} else {
+					style = style.Width(7)
+				}
 			}
 
 			switch col {
 				case 1:
-					return baseStyle.Foreground(lipgloss.Color("220"))
+					style = style.Foreground(lipgloss.Color("220"))
 				case 2, 3, 4:
 					c := typeColors
 
-					color := c[fmt.Sprint(data[row-1][col])]
-					return baseStyle.Foreground(color)
+					if row > 0 {
+						color := c[fmt.Sprint(data[row-1][col])]
+						style = style.Foreground(lipgloss.Color(color))
+					}
 			}
 
-			return baseStyle.Foreground(lipgloss.Color("252"))
+			return style
 		})
 
 	fmt.Println(renderTable)

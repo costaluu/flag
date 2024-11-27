@@ -910,6 +910,7 @@ func AllVersionFeatureDetails() {
 func VersionFeatureDetailsFromPath(path string) {
 	var rootDir string = git.GetRepositoryRoot()
 	hashedPath := utils.HashPath(path)
+	author, date := git.GetLastCommitInfo(path) 
 
 	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
 
@@ -928,7 +929,7 @@ func VersionFeatureDetailsFromPath(path string) {
 
 	tree := workingtree.LoadWorkingTree(filepath.Join(rootDir, ".features", "versions", hashedPath))
 	
-	headers := []string{"NAME", "TYPE", "STATE"}
+	headers := []string{"NAME", "TYPE", "STATE", "AUTHOR", "DATE"}
 	var data [][]string = [][]string{}
 
 	for key, _ := range tree {
@@ -963,7 +964,7 @@ func VersionFeatureDetailsFromPath(path string) {
 				}
 			}
 
-			data = append(data, []string{strings.Join(names, "+"), featureOrState, state})
+			data = append(data, []string{strings.Join(names, "+"), featureOrState, state, author, date})
 		} else {
 			var state string = "NOT ACTIVE"
 
@@ -971,7 +972,7 @@ func VersionFeatureDetailsFromPath(path string) {
 				state = "ACTIVE"
 			}
 
-			data = append(data, []string{strings.Join(names, "+"), featureOrState, state})
+			data = append(data, []string{strings.Join(names, "+"), featureOrState, state, author, date})
 		}
 	}
 
@@ -1352,7 +1353,7 @@ func VersionDemote(finalMessage bool) {
 }
 
 func Merge(pathA string, pathB string, pathBase string, featureA string, featureB string, title string) {
-	hasConflicts := git.Merge3Way(pathA, pathBase, pathB, featureA, featureB)
+	hasConflicts := git.GitMerge(pathBase, pathA, pathB, featureA, featureB)
 
 	if hasConflicts {
 		conflict.Resolve(title)	
