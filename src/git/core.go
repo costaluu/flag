@@ -44,7 +44,7 @@ func GetLastCommitInfo(path string) (string, string) {
 		commitInfo = strings.Split(commitInfo[0], ",")
 		
 		author = commitInfo[0][1:]
-		date = commitInfo[1][0:len(commitInfo[1]) - 1]
+		date = commitInfo[1][1:len(commitInfo[1]) - 2]
 	}
 
 	if date == "NOT FOUND" {

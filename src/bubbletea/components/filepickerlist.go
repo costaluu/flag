@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/bubbletea/custom/list"
 	"github.com/costaluu/flag/constants"
 )
 
