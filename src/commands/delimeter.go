@@ -75,7 +75,7 @@ var DelimeterDeleteCommand *cli.Command = &cli.Command{
 }
 
 var DelimeterCommand *cli.Command = &cli.Command{
-	Name: "delimeters",
+	Name: "delimiters",
 	Usage: "operations for delimeters",
 	Subcommands: []*cli.Command{
 		DelimeterListCommand,
