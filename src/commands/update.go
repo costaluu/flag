@@ -9,7 +9,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 
+	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/constants"
 	"github.com/costaluu/flag/logger"
 	"github.com/urfave/cli/v2"
 )
@@ -224,44 +228,54 @@ var UpdateCommand *cli.Command = &cli.Command{
 	Name:    "update",
 	Usage:   "download the latest version of flag",
 	Action: func(ctx *cli.Context) error {
+		action := func() {
+			time.Sleep(time.Second)
+		}
+
+		var zipPath string
+		var err error
+
 		binaryPath := getBinaryPath()
 
-		logger.Info[string]("downloading the latest version...")
+		downloadBinaryAction := func () {
+			zipPath, err = downloadLatestRelease(binaryPath)
 
-		zipPath, err := downloadLatestRelease(binaryPath)
-
-		if err != nil {
-			logger.Result[error](err)
+			if err != nil {
+				logger.Result[error](err)
+			}
 		}
+		defer os.Remove(zipPath)
 
-		defer os.Remove(zipPath) // Clean up the temp file
+		extractBinaryAction := func () {
+			// Extract the new binary and prepare for replacement
+			newBinaryPath, err := extractAndPrepareBinary(binaryPath, zipPath)
+			
+			if err != nil {
+				logger.Result[error](err)
+			}
 
-		logger.Info[string]("extracting binary...")
+			osType := runtime.GOOS
 
-		// Extract the new binary and prepare for replacement
-		newBinaryPath, err := extractAndPrepareBinary(binaryPath, zipPath)
+			if osType == "windows" {
+				err := runPowerShellUpdater(binaryPath, newBinaryPath, filepath.Join(filepath.Dir(binaryPath), "new-flag-version.zip"))
+				
+				if err != nil {
+					logger.Result[error](err)
+				}
+			} else {
+				err := runBashUpdater(binaryPath, newBinaryPath, filepath.Join(filepath.Dir(binaryPath), "new-flag-version.zip"))
+				
+				if err != nil {
+					logger.Result[error](err)
+				}
+			}
+		}
 		
-		if err != nil {
-			logger.Result[error](err)
-		}
+		_ = spinner.New().Title("downloading the latest version...").Style(lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor))).Action(downloadBinaryAction).Run()
+		_ = spinner.New().Title("extracting binary...").Style(lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor))).Action(extractBinaryAction).Run()
+		_ = spinner.New().Title("cleaning up...").Style(lipgloss.NewStyle().Foreground(lipgloss.Color(constants.AccentColor))).Action(action).Run()
 
-		osType := runtime.GOOS
-
-		if osType == "windows" {
-			err := runPowerShellUpdater(binaryPath, newBinaryPath, filepath.Join(filepath.Dir(binaryPath), "new-flag-version.zip"))
-			
-			if err != nil {
-				logger.Result[error](err)
-			}
-		} else {
-			err := runBashUpdater(binaryPath, newBinaryPath, filepath.Join(filepath.Dir(binaryPath), "new-flag-version.zip"))
-			
-			if err != nil {
-				logger.Result[error](err)
-			}
-		}
-
-		logger.Success[string]("binary updated, cleaning up... please wait a few seconds")
+		logger.Success[string]("binary updated")
 		
 		return nil
 	},    
