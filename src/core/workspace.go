@@ -114,6 +114,12 @@ func WorkspaceReport() {
 }
 
 func GlobalToggle(featureName string, state string) {
+	exists := CheckWorkspaceFolder()
+
+	if !exists {
+		logger.Result[string]("workspace not found, use flag init")
+	}
+
 	ToggleBlockFeature(featureName, state) // on | off | dev
 
 	if state == constants.STATE_DEV {

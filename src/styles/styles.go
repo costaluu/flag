@@ -7,6 +7,14 @@ import (
 	"github.com/costaluu/flag/constants"
 )
 
+func AccentTextNoUnderline(message string) string {
+	return lipgloss.
+		NewStyle().
+		SetString(message).
+		Foreground(lipgloss.Color(constants.AccentColor)).
+		Render()
+}
+
 func AccentTextStyle(message string) string {
 	return lipgloss.
 		NewStyle().

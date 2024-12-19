@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,23 +52,27 @@ func handleVersion(path string) {
 
 		if hasChangesWithoutSave {
 			var options []huh.Option[string] = []huh.Option[string]{
-						huh.Option[string]{
+						{
 							Key: "Save changes to the current feature/state" + fmt.Sprintf(" (%s)", name),
 							Value: "save to current state",
 						},
-						huh.Option[string]{
+						{
 							Key: "Save changes to a specific feature/state",
 							Value: "save to feature/state",
 						},
-						huh.Option[string]{
+						{
 							Key: "Create a new feature with the change",
 							Value: "create feature",
 						},
-						huh.Option[string]{
+						{
 							Key: fmt.Sprintf("Rebase (merge changes to all [%d] features/states)", len(tree)),
 							Value: "rebase",
 						},
-						huh.Option[string]{
+						{
+							Key: "See diff between files",
+							Value: "diff",
+						},
+						{
 							Key: "Restore changes",
 							Value: "cancel",
 						},
@@ -74,15 +80,19 @@ func handleVersion(path string) {
 
 			if len(features) == 0 {
 				var newOptions []huh.Option[string] = []huh.Option[string]{
-					huh.Option[string]{
+					{
 						Key: "Update base",
 						Value: "update base",
 					},
-					huh.Option[string]{
+					{
 						Key: "Create a new feature with the change",
 						Value: "create feature",
 					},
-					huh.Option[string]{
+					{
+						Key: "See diff between files",
+						Value: "diff",
+					},
+					{
 						Key: "Restore changes",
 						Value: "cancel",
 					},
@@ -90,39 +100,48 @@ func handleVersion(path string) {
 
 				options = newOptions
 			}
-			
+						
 			logger.Info[string](fmt.Sprintf("we detected untracked changes on %s that is a version base\n", path))
+			stayInLoop := true
+			
+			for stayInLoop {
+				stayInLoop = false
+				selected := components.FormSelect("What should we do?", options)
 
-			selected := components.FormSelect("What should we do?", options)
-
-			if selected == "update base" {
-				VersionUpdateBase(path, false)
-			} else if selected == "rebase" {
-				RebaseFile(path, false)
-			} else if selected == "create feature" {
-				featureName := components.FormInput("What's the name of the feature?", func (value string) error {
-					for _, feature := range features {
-						if feature.Name == value {
-							return fmt.Errorf("%s already exists for %s", value, path)
+				if selected == "update base" {
+					VersionUpdateBase(path, false)
+				} else if selected == "rebase" {
+					RebaseFile(path, false)
+				} else if selected == "create feature" {
+					featureName := components.FormInput("What's the name of the feature?", func (value string) error {
+						for _, feature := range features {
+							if feature.Name == value {
+								return fmt.Errorf("%s already exists for %s", value, path)
+							}
 						}
-					}
 
-					if len(value) < constants.MIN_FEATURE_CHARACTERS {
-						return fmt.Errorf(fmt.Sprintf("Please provide a name with at least %d characters", constants.MIN_FEATURE_CHARACTERS))
-					} else if strings.Contains(value, "+") {
-						return fmt.Errorf("Strings can not contain special characters")
-					}
+						if len(value) < constants.MIN_FEATURE_CHARACTERS {
+							return fmt.Errorf("please provide a name with at least %d characters", constants.MIN_FEATURE_CHARACTERS)
+						} else if strings.Contains(value, "+") {
+							return fmt.Errorf("strings can not contain special characters")
+						}
 
-					return nil
-				})
+						return nil
+					})
 
-				VersionNewFeature(path, featureName, false, false)
-			} else if selected == "save to current state" {
-				VersionSaveToCurrentState(path)
-			} else if selected == "save to feature/state" {
-				VersionSave(path, false)
-			} else {
-				BuildBaseForFile(path)
+					VersionNewFeature(path, featureName, false, false)
+				} else if selected == "save to current state" {
+					VersionSaveToCurrentState(path)
+				} else if selected == "save to feature/state" {
+					VersionSave(path, false)
+				} else if selected == "diff" {
+					stayInLoop = true
+					currentTrackedPath, currentStateName := VersionsGetCurrentStatePath(path)
+
+					utils.DiffCurrentTrackedVersionWithCurrentVersion(currentStateName, currentTrackedPath, filepath.Join(rootDir, path))
+				} else {
+					BuildBaseForFile(path)
+				}
 			}
 		}
 	}
@@ -189,7 +208,7 @@ func HandleBlock(path string) {
 	}
 }
 
-func Sync() {
+func Sync(hardSync bool) {
 	modified := git.GetModifedFiles()
 	untracked := git.GetUntrackedFiles()
 	deleted := git.GetDeletedFiles()
@@ -229,6 +248,56 @@ func Sync() {
 				Path: path,
 				Action: []string{"delete"},
 			}
+	}
+
+	if hardSync {
+		var rootDir string = git.GetRepositoryRoot()
+
+		err := filepath.WalkDir(filepath.Join(rootDir, ".features", "blocks"), func (path string, d os.DirEntry, err error) error {
+			if err != nil {
+				logger.Fatal[error](err)
+			}
+
+			if d.IsDir() && filepath.Join(rootDir, ".features", "blocks") != path {
+				recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+
+				files[recoveredPath] = types.FilePathCategory{
+					Path: recoveredPath,
+					Action: []string{"untracked"},
+				}
+
+				return fs.SkipDir
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			logger.Result[string](fmt.Sprintf("couldn't get all files"))
+		}
+
+		err = filepath.WalkDir(filepath.Join(rootDir, ".features", "versions"), func (path string, d os.DirEntry, err error) error {
+			if err != nil {
+				logger.Fatal[error](err)
+			}
+
+			if d.IsDir() && filepath.Join(rootDir, ".features", "versions") != path {
+				recoveredPath := filesystem.FileRead(filepath.Join(path, "_path"))
+
+				files[recoveredPath] = types.FilePathCategory{
+					Path: recoveredPath,
+					Action: []string{"untracked"},
+				}
+				
+				return fs.SkipDir
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			logger.Result[string](fmt.Sprintf("couldn't get all files"))
+		}
 	}
 
 	var arrayFile []types.FilePathCategory = []types.FilePathCategory{}

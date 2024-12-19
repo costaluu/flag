@@ -8,8 +8,11 @@ import (
 var SyncCommand *cli.Command = &cli.Command{
 	Name:      "sync",
 	Usage:     "updates all features on created, modifed, deleted files",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{Name: "all", Usage: "check all files tracked by flag"},
+	},
 	Action: func(ctx *cli.Context) error {
-		core.Sync()
+		core.Sync(ctx.Bool("all"))
 		return nil
 	},
 }

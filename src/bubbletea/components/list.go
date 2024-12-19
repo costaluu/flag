@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/costaluu/flag/constants"
 )
 
 var ListResult ListItem
@@ -70,14 +71,14 @@ func PickerList(title string, items []ListItem) ListItem {
 
 	customDelegate.Styles.SelectedTitle = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(lipgloss.Color("130")).
-		Foreground(lipgloss.Color("250")).
+		BorderForeground(lipgloss.Color(constants.AccentColor)).
+		Foreground(lipgloss.Color(constants.AccentColor)).
 		Padding(0, 0, 0, 1)
 
 	customDelegate.Styles.SelectedDesc = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(lipgloss.Color("130")).
-		Foreground(lipgloss.Color("240")).
+		BorderForeground(lipgloss.Color(constants.AccentColor)).
+		Foreground(lipgloss.Color(constants.AccentDarkerColor)).
 		Padding(0, 0, 0, 1)
 	
 	var parsedItems []list.Item = []list.Item{}

@@ -720,6 +720,48 @@ func BuildBaseForFile(path string) {
 	}
 }
 
+func VersionsGetCurrentStatePath(path string) (string, string) {
+	workspaceExists := CheckWorkspaceFolder()
+
+	var rootDir string = git.GetRepositoryRoot()
+
+	if !workspaceExists {
+		logger.Result[string]("workspace not found, use flag init")
+	}
+
+	hashedPath := utils.HashPath(path)
+
+	baseExists := filesystem.FileFolderExists(filepath.Join(rootDir, ".features", "versions", hashedPath))
+
+	if !baseExists {
+		logger.Result[string](fmt.Sprintf("%s is not a base file", path))
+	}
+
+	featuresTurnedOn := GetVersionFeaturesFromPath(hashedPath)
+
+	if len(featuresTurnedOn) == 0 {
+		return filepath.Join(rootDir, ".features", "versions", hashedPath, "base"), "Base"
+	} else {
+		featuresTurnedOn = utils.ArrayFilter[types.VersionFeature](featuresTurnedOn, func (feature types.VersionFeature) bool {
+			return feature.State == constants.STATE_ON
+		})
+
+		var currentStateFeatures []string = []string{}
+			
+		for _, feature := range featuresTurnedOn {
+			currentStateFeatures = append(currentStateFeatures, feature.Id)
+		}
+
+		_, workingTreeValueCurrentState, exists := workingtree.FindKeyValue(filepath.Join(rootDir, ".features", "versions", hashedPath), currentStateFeatures)
+
+		if !exists {
+			logger.Result[string]("can not find current state")
+		}
+
+		return filepath.Join(rootDir, ".features", "versions", hashedPath, constants.WorkingTreeDirectory, workingTreeValueCurrentState.SavedCheckSum), GetCurrentStateName(path)
+	}
+}
+
 func VersionLookForUntrackedChanges(path string) bool {
 	workspaceExists := CheckWorkspaceFolder()
 
@@ -857,6 +899,11 @@ func GetCurrentStateName(path string) string {
 	hashedPath := utils.HashPath(path)
 
 	features := GetVersionFeaturesFromPath(hashedPath)
+
+	if len(features) == 0 {
+		return "Base"
+	}
+
 	var currentFeaturesNamesTurnedOn []string = []string{}
 
 	for _, feature := range features {

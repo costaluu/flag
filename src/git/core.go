@@ -172,6 +172,27 @@ func personalizeConflictMarkers(repoPath, versionALabel, versionBLabel string) b
 	return strings.Contains(customContent, "<<<<<<< ")
 }
 
+func GitDiff(fileAPath string, fileBPath string) string {
+	cmd := exec.Command("git", "diff", "--no-index", "--minimal", "--patience", fileAPath, fileBPath)
+
+	out, _ := cmd.Output()
+
+	if len(out) == 0 {
+		return ""
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	var linesFiltered []string = []string{}
+
+	for _, line := range lines[4:] {
+		if line != `\ No newline at end of file` {
+			linesFiltered = append(linesFiltered, line)
+		}
+	}
+
+	return strings.Join(linesFiltered, "\n")
+}
+
 func GitMerge(basePath string, versionAPath string, versionBPath string, versionALabel string, versionBLabel string) bool {
 	// Define the repository path
 	repoRoot := GetRepositoryRoot()
